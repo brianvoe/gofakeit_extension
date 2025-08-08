@@ -1,54 +1,37 @@
-// Fake data generators
-const firstNames = ["Alice", "Bob", "Charlie", "Diana", "Eve"];
-const lastNames  = ["Smith", "Johnson", "Williams", "Brown", "Jones"];
-function randomItem<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-function randomName(): string {
-  return `${randomItem(firstNames)} ${randomItem(lastNames)}`;
-}
-function randomEmail(): string {
-  const provider = randomItem(["example.com", "mail.com", "test.com"]);
-  return `${randomItem(firstNames).toLowerCase()}.${randomItem(lastNames).toLowerCase()}@${provider}`;
-}
-function randomInt(): number {
-  return Math.floor(Math.random() * 100);
-}
-function randomWord(): string {
-  const words = ["lorem", "ipsum", "dolor", "sit", "amet", "consectetur"];
-  return randomItem(words);
-}
-function randomSentence(): string {
-  const wordCount = Math.floor(Math.random() * 5) + 3;
-  const sentenceWords = Array.from({ length: wordCount }, () => randomWord());
-  // Capitalize first word and add period at end
-  sentenceWords[0] = sentenceWords[0][0].toUpperCase() + sentenceWords[0].slice(1);
-  return sentenceWords.join(" ") + ".";
-}
+import { GofakeitMessage } from './types';
+import { fetchGofakeitData } from './gofakeit-api';
+import { autofillFormFields } from './autofill-core';
+import { enableSelectionMode } from './selection-mode';
 
-// Autofill inputs and textareas
-document.querySelectorAll('input, textarea').forEach(element => {
-  if (element instanceof HTMLTextAreaElement) {
-    element.value = randomSentence();  // fill textarea with a random sentence
-  } else if (element instanceof HTMLInputElement) {
-    switch (element.type.toLowerCase()) {
-      case 'text':
-        element.value = randomName();
-        break;
-      case 'email':
-        element.value = randomEmail();
-        break;
-      case 'number':
-        element.value = randomInt().toString();
-        break;
-      case 'checkbox':
-      case 'radio':
-        // Randomly check half of checkboxes/radios
-        element.checked = Math.random() < 0.5;
-        break;
-      default:
-        // Default fill for other input types (e.g. search, url, etc.)
-        element.value = randomWord();
-    }
+// Wrap everything in an IIFE to prevent global scope pollution
+(function() {
+  // Check if already initialized
+  if (window.gofakeitExtensionInjected) {
+    console.log('[Gofakeit Autofill] Content script already initialized, skipping');
+    return;
   }
-});
+
+  // Mark as initialized
+  window.gofakeitExtensionInjected = true;
+
+  // Log to verify it only runs when injected
+  console.log('[Gofakeit Autofill] Content script injected');
+
+  // Message listener for handling commands from popup
+  chrome.runtime.onMessage.addListener(async (msg: GofakeitMessage, _sender, _sendResponse) => {
+    if (msg.command === 'autofill-all') {
+      autofillFormFields().catch(error => {
+        console.error('[Gofakeit Autofill] Error during autofill:', error);
+      });
+    } else if (msg.command === 'autofill-selected') {
+      enableSelectionMode();
+    } else if (msg.command === 'random-name') {
+      const name = await fetchGofakeitData('name');
+      alert(`Random Name: ${name || 'Failed to fetch'}`);
+    } else if (msg.command === 'random-email') {
+      const email = await fetchGofakeitData('email');
+      alert(`Random Email: ${email || 'Failed to fetch'}`);
+    }
+  });
+
+})();

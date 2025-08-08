@@ -1,23 +1,40 @@
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import { defineConfig } from 'vite'
+import hotReload from 'hot-reload-extension-vite'
+import path from 'path'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 export default defineConfig({
+  plugins: [
+    hotReload({
+      log: true, // set to false if you don't want console logs
+      backgroundPath: path.resolve(__dirname, 'src/background.ts'),
+    }),
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'src/assets/images/*.png',
+          dest: '.' // copies to dist/
+        },
+        {
+          src: 'src/popup.html',
+          dest: '.' // copies popup.html to dist/popup.html
+        }
+      ]
+    })
+  ],
   build: {
-    outDir: 'dist',         // output directory for bundled files
-    emptyOutDir: true,      // clear previous builds in dist
+    outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
-      // Specify the content script entry file (no index.html needed)
-      input: resolve(__dirname, 'src/content.ts'),
+      input: {
+        content: path.resolve(__dirname, 'src/content.ts'),
+        background: path.resolve(__dirname, 'src/background.ts'),
+        popup: path.resolve(__dirname, 'src/popup.ts')
+      },
       output: {
-        format: 'iife',               // bundle as an IIFE script:contentReference[oaicite:3]{index=3}
-        entryFileNames: 'content.js'  // name of the output bundle
+        format: 'es',
+        entryFileNames: '[name].js'
       }
     }
-    // Alternatively, you could use library mode:
-    // lib: {
-    //   entry: resolve(__dirname, 'src/content.ts'),
-    //   name: 'ContentScript',        // global name for IIFE (if any exports)
-    //   formats: ['iife']
-    // },
   }
-});
+})

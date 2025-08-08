@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Gofakeit Autofill",
+  "version": "1.0",
+  "action": {
+    "default_popup": "./popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    },
+    "default_title": "Click to autofill"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "commands": {
+    "trigger-autofill": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F"
+      },
+      "description": "Trigger autofill on active tab"
+    }
+  }
+}
