@@ -7,9 +7,8 @@ This directory contains the organized source code for the Gofakeit browser exten
 ```
 src/
 ├── types.ts                 # TypeScript type definitions
-├── gofakeit-api.ts          # Gofakeit API interactions
-├── autofill-core.ts         # Core autofill logic
-├── autofill-utils.ts        # Form field detection utilities
+├── api.ts                   # Gofakeit API interactions
+├── autofill.ts              # Core autofill logic & utilities
 ├── selection-mode.ts        # Interactive selection mode
 ├── notifications.ts         # Notification system
 ├── content.ts               # Main content script
@@ -26,19 +25,17 @@ src/
 - Type definitions
 - Global type extensions
 
-### `gofakeit-api.ts`
+### `api.ts`
 - Handles all HTTP requests to the Gofakeit API
 - Error handling for API calls
 - Data fetching for form field values
 
-### `autofill-core.ts`
+### `autofill.ts`
 - Core autofill functionality
 - Individual field autofill
 - Container autofill
 - Form-wide autofill
-
-### `autofill-utils.ts`
-- Form field detection
+- Form field detection utilities
 - Container finding logic
 - Element type checking
 

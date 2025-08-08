@@ -1,6 +1,6 @@
 import { GofakeitMessage } from './types';
-import { fetchGofakeitData } from './gofakeit-api';
-import { autofillFormFields } from './autofill-core';
+import { fetchGofakeitData } from './api';
+import { autofillFormFields } from './autofill';
 import { enableSelectionMode } from './selection-mode';
 
 // Wrap everything in an IIFE to prevent global scope pollution

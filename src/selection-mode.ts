@@ -1,7 +1,6 @@
 import { SelectionState } from './types';
 import { showNotification } from './notifications';
-import { autofillElement, autofillContainer } from './autofill-core';
-import { isFormField, findFormContainer } from './autofill-utils';
+import { autofillElement, autofillContainer, isFormField, findFormContainer } from './autofill';
 
 // Global state for selection mode
 let selectionState: SelectionState = {
