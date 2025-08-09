@@ -8,9 +8,7 @@ let selectionState: SelectionState = {
   highlightedElement: null
 };
 
-/**
- * Enable selection mode for clicking on form containers and fields
- */
+// Enable selection mode for clicking on form containers and fields
 export function enableSelectionMode(): void {
   if (selectionState.isActive) {
     return; // Already active
@@ -28,9 +26,7 @@ export function enableSelectionMode(): void {
   document.addEventListener('keydown', handleKeyDown);
 }
 
-/**
- * Disable selection mode
- */
+// Disable selection mode
 export function disableSelectionMode(): void {
   if (!selectionState.isActive) {
     return;
@@ -49,13 +45,9 @@ export function disableSelectionMode(): void {
     selectionState.highlightedElement.style.outline = '';
     selectionState.highlightedElement = null;
   }
-  
-  showNotification('Selection mode disabled', 'info');
 }
 
-/**
- * Handle mouse over events to highlight potential containers and fields
- */
+// Handle mouse over events to highlight potential containers and fields
 function handleMouseOver(event: MouseEvent): void {
   if (!selectionState.isActive) return;
   
@@ -71,7 +63,7 @@ function handleMouseOver(event: MouseEvent): void {
       }
       
       // Add new highlight to the field
-      target.style.outline = '2px solid orange';
+      target.style.outline = `2px solid var(--color-primary)`;
       selectionState.highlightedElement = target;
     }
     return;
@@ -86,14 +78,12 @@ function handleMouseOver(event: MouseEvent): void {
     }
     
     // Add new highlight
-    container.style.outline = '2px solid orange';
+    container.style.outline = `2px solid var(--color-primary)`;
     selectionState.highlightedElement = container;
   }
 }
 
-/**
- * Handle mouse out events to remove highlights
- */
+// Handle mouse out events to remove highlights
 function handleMouseOut(event: MouseEvent): void {
   if (!selectionState.isActive) return;
   
@@ -107,9 +97,7 @@ function handleMouseOut(event: MouseEvent): void {
   }
 }
 
-/**
- * Handle click events to autofill the selected container or field
- */
+// Handle click events to autofill the selected container or field
 async function handleClick(event: MouseEvent): Promise<void> {
   if (!selectionState.isActive) return;
   
@@ -134,9 +122,7 @@ async function handleClick(event: MouseEvent): Promise<void> {
   }
 }
 
-/**
- * Handle key events (escape to exit selection mode)
- */
+// Handle key events (escape to exit selection mode)
 function handleKeyDown(event: KeyboardEvent): void {
   if (!selectionState.isActive) return;
   

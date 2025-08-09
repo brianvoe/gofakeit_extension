@@ -12,12 +12,20 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'src/assets/images/*.png',
-          dest: '.' // copies to dist/
+          src: 'src/assets/images/*',
+          dest: 'assets/images' // copies all images to dist/assets/images/
+        },
+        {
+          src: 'src/assets/css/styles.css',
+          dest: 'assets/css' // copies styles.css to dist/assets/css/
         },
         {
           src: 'src/popup.html',
           dest: '.' // copies popup.html to dist/popup.html
+        },
+        {
+          src: 'public/manifest.json',
+          dest: '.' // copies manifest.json to dist/
         }
       ]
     })

@@ -3,24 +3,105 @@
 <head>
   <meta charset="UTF-8" />
   <title>Gofakeit Autofill</title>
+
   <style>
-    body {
-      min-width: 200px;
-      font-family: sans-serif;
-      padding: 10px;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    button {
-      display: block;
-      margin: 8px 0;
-      width: 100%;
+
+    body {
+      min-width: 500px;
+      font-family: var(--font-family);
+      font-size: var(--font-size);
+      color: var(--color-font);
+      background: transparent;
+      padding: 0;
+      margin: 0;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing);
+      background: var(--color-background);
+      padding: var(--spacing);
+      overflow: hidden;
+    }
+
+    .header {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+
+      img {
+        height: 50px;
+        width: auto;
+      }
+    }
+
+    .section {
+      background: var(--color-background);
+
+      .section-header {
+        margin-bottom: var(--spacing-half);
+      }
+
+      .actions {
+        display: flex;
+        gap: var(--spacing-half);
+
+        .btn {
+          flex: 0 1 100%;
+        }
+      }
+    }
+
+    .footer {
+      text-align: center;
+
+      .footer-text {
+        font-size: 11px;
+        opacity: 0.8;
+
+        a {
+          color: var(--color-primary);
+          text-decoration: none;
+          transition: all 0.3s ease;
+          
+          &:hover {
+            text-decoration: underline;
+            filter: brightness(110%);
+          }
+        }
+      }
     }
   </style>
 </head>
-<body>
-  <h3>Gofakeit</h3>
-  <button id="autofill-all">Autofill All</button>
-  <button id="autofill-selected">Autofill Selected</button>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img src="assets/images/full.svg" alt="Gofakeit Logo">
+      </div>
 
-  <script type="module" src="./popup.js"></script>
-</body>
+      <div class="section">
+        <h2 class="section-header">Autofill</h2>
+        <div class="actions">
+          <button id="autofill-all" class="btn primary">All</button>
+          <button id="autofill-selected" class="btn secondary">Selected</button>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-text">
+          <a href="https://gofakeit.com" target="_blank">Powered by Gofakeit</a>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./popup.js"></script>
+  </body>
 </html>

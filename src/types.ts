@@ -1,5 +1,5 @@
 export interface GofakeitMessage {
-  command: 'autofill-all' | 'autofill-selected' | 'random-name' | 'random-email';
+  command: 'autofill-all' | 'autofill-selected' | 'ping';
 }
 
 export type NotificationType = 'success' | 'error' | 'info';

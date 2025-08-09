@@ -21,6 +21,10 @@
   },
   "permissions": ["scripting", "activeTab"],
   "host_permissions": ["<all_urls>"],
+  "web_accessible_resources": [{
+    "resources": ["assets/css/styles.css", "assets/images/full.svg"],
+    "matches": ["<all_urls>"]
+  }],
   "commands": {
     "trigger-autofill": {
       "suggested_key": {

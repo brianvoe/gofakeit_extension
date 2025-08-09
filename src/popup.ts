@@ -1,24 +1,45 @@
+// Load CSS styles
+function loadCSSStyles(): void {
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = chrome.runtime.getURL('assets/css/styles.css');
+  document.head.appendChild(link);
+}
+
+// Check if content script is already injected
+async function isContentScriptInjected(tabId: number): Promise<boolean> {
+  try {
+    await chrome.tabs.sendMessage(tabId, { command: 'ping' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Inject content script if not already injected
+async function injectContentScriptIfNeeded(tabId: number): Promise<void> {
+  const isInjected = await isContentScriptInjected(tabId);
+  if (!isInjected) {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['content.js']
+    });
+  }
+}
+
 const sendCommand = async (command: string) => {
   try {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const tab = tabs[0];
     if (tab?.id) {
       // First, ensure the content script is injected
-      try {
-        await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content.js']
-        });
-      } catch (injectionError) {
-        // If injection fails (e.g., already injected), continue anyway
-        console.log('Content script injection skipped (likely already injected)');
-      }
+      await injectContentScriptIfNeeded(tab.id);
       
       // Then send the message
       await chrome.tabs.sendMessage(tab.id, { command });
       
       // Close the popup for interactive commands
-      if (command === 'autofill-selected') {
+      if (command === 'autofill-selected' || command === 'autofill-all') {
         window.close();
       }
     }
@@ -26,6 +47,15 @@ const sendCommand = async (command: string) => {
     console.error('Error sending command:', error);
   }
 };
+
+// Load CSS styles when popup opens
+loadCSSStyles();
+
+// Set the correct SVG URL for the logo
+const logoImg = document.querySelector('.header img') as HTMLImageElement;
+if (logoImg) {
+  logoImg.src = chrome.runtime.getURL('assets/images/full.svg');
+}
 
 document.getElementById('autofill-all')?.addEventListener('click', () => sendCommand('autofill-all'));
 document.getElementById('autofill-selected')?.addEventListener('click', () => sendCommand('autofill-selected'));
