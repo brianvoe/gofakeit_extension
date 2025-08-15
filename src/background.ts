@@ -1,5 +1,5 @@
 // Check if content script is already injected
-async function isContentScriptInjected(tabId: number): Promise<boolean> {
+export async function isContentScriptInjected(tabId: number): Promise<boolean> {
   try {
     await chrome.tabs.sendMessage(tabId, { command: 'ping' });
     return true;
@@ -9,7 +9,7 @@ async function isContentScriptInjected(tabId: number): Promise<boolean> {
 }
 
 // Inject content script if not already injected
-async function injectContentScriptIfNeeded(tabId: number): Promise<void> {
+export async function injectContentScriptIfNeeded(tabId: number): Promise<void> {
   const isInjected = await isContentScriptInjected(tabId);
   if (!isInjected) {
     await chrome.scripting.executeScript({

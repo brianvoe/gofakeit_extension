@@ -1,5 +1,5 @@
 import { SelectionState } from './types';
-import { showNotification } from './notifications';
+import { showNotification, dismissAllPersistentNotifications } from './notifications';
 import { autofillElement, autofillContainer, isFormField, findFormContainer } from './autofill';
 
 // Global state for selection mode
@@ -15,7 +15,10 @@ export function enableSelectionMode(): void {
   }
   
   selectionState.isActive = true;
-  showNotification('Click on a form field or container to autofill', 'info');
+  showNotification('Click on a form field or container to autofill', 'persistent', () => {
+    // Dismiss callback - exit selection mode when notification is dismissed
+    disableSelectionMode();
+  });
   
   // Add event listeners for mouse events
   document.addEventListener('mouseover', handleMouseOver);
@@ -45,6 +48,9 @@ export function disableSelectionMode(): void {
     selectionState.highlightedElement.style.outline = '';
     selectionState.highlightedElement = null;
   }
+  
+  // Dismiss all persistent notifications
+  dismissAllPersistentNotifications();
 }
 
 // Handle mouse over events to highlight potential containers and fields

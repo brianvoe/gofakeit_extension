@@ -2,7 +2,7 @@ export interface GofakeitMessage {
   command: 'autofill-all' | 'autofill-selected' | 'ping';
 }
 
-export type NotificationType = 'success' | 'error' | 'info';
+export type NotificationType = 'success' | 'error' | 'info' | 'persistent';
 
 export interface SelectionState {
   isActive: boolean;

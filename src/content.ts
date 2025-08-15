@@ -1,7 +1,6 @@
 import { GofakeitMessage } from './types';
-import { fetchGofakeitData } from './api';
-import { autofillFormFields } from './autofill';
-import { enableSelectionMode } from './selection-mode';
+import { autofillAll } from './autofill';
+import { enableSelectionMode } from './selection';
 
 // Inject CSS styles into the page
 function injectCSSStyles(): void {
@@ -34,7 +33,7 @@ function injectCSSStyles(): void {
       // Respond to ping to confirm content script is injected
       _sendResponse({ status: 'ok' });
     } else if (msg.command === 'autofill-all') {
-      autofillFormFields().catch(error => {
+      autofillAll().catch(error => {
         console.error('[Gofakeit Autofill] Error during autofill:', error);
       });
     } else if (msg.command === 'autofill-selected') {

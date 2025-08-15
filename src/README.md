@@ -6,16 +6,20 @@ This directory contains the organized source code for the Gofakeit browser exten
 
 ```
 src/
+└── index.ts                 # Main exports
 ├── types.ts                 # TypeScript type definitions
 ├── api.ts                   # Gofakeit API interactions
+├── selection.ts             # Interactive selection mode
 ├── autofill.ts              # Core autofill logic & utilities
-├── selection-mode.ts        # Interactive selection mode
+├── input-datetime.ts        # Date/time input handling
+├── input-text.ts            # Text input handling
+├── input-number.ts          # Number input handling
+├── input-misc.ts            # Miscellaneous input handling
 ├── notifications.ts         # Notification system
 ├── content.ts               # Main content script
 ├── popup.ts                 # Popup script
 ├── popup.html               # Popup HTML
 ├── background.ts            # Background service worker
-└── index.ts                 # Main exports
 ```
 
 ## File Responsibilities
@@ -39,11 +43,39 @@ src/
 - Container finding logic
 - Element type checking
 
-### `selection-mode.ts`
+### `selection.ts`
 - Interactive selection mode
 - Mouse event handling
 - Visual highlighting
 - Click detection
+
+### `input-datetime.ts`
+- Date input handling (date, datetime-local, time, month, week)
+- ISO date string parsing
+- Custom function support
+- Proper formatting for HTML5 inputs
+
+### `input-text.ts`
+- Text input handling (text, email, tel, password, search, url)
+- Textarea handling
+- Smart function mapping for 'true' values
+- Event triggering
+- Error handling
+
+### `input-number.ts`
+- Number input handling
+- Range input handling
+- Smart function mapping for 'true' values
+- Min/max parameter support for range inputs
+- Event triggering
+- Error handling
+
+### `input-misc.ts`
+- Checkbox input handling (with group selection logic)
+- Radio input handling
+- Select dropdown handling (random and function-based)
+- Event triggering
+- Error handling
 
 ### `notifications.ts`
 - Toast notification system

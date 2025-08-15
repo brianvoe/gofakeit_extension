@@ -5,6 +5,8 @@ interface QueuedNotification {
   message: string;
   type: NotificationType;
   timestamp: number;
+  persistent?: boolean;
+  dismissCallback?: () => void;
 }
 
 // Global notification container
@@ -47,6 +49,94 @@ function removeNotification(notification: HTMLElement): void {
   processNextNotification();
 }
 
+// Create a dismiss button for persistent notifications
+function createDismissButton(notification: HTMLElement, dismissCallback?: () => void): HTMLElement {
+  const dismissBtn = document.createElement('button');
+  dismissBtn.innerHTML = '&times;';
+  dismissBtn.style.cssText = `
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  
+  dismissBtn.addEventListener('mouseenter', () => {
+    dismissBtn.style.opacity = '1';
+  });
+  
+  dismissBtn.addEventListener('mouseleave', () => {
+    dismissBtn.style.opacity = '0.7';
+  });
+  
+  dismissBtn.addEventListener('click', () => {
+    // Animate out
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateX(100%)';
+    
+    setTimeout(() => {
+      removeNotification(notification);
+      if (dismissCallback) {
+        dismissCallback();
+      }
+    }, 300);
+  });
+  
+  return dismissBtn;
+}
+
+// Create visual indicator for selection mode
+function createSelectionIndicator(): HTMLElement {
+  const indicator = document.createElement('div');
+  indicator.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 12px;
+  `;
+  
+  // Create cursor icon
+  const cursorIcon = document.createElement('div');
+  cursorIcon.innerHTML = '👆';
+  cursorIcon.style.cssText = `
+    font-size: 16px;
+    animation: pulse 2s infinite;
+  `;
+  
+  // Add pulse animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  const text = document.createElement('span');
+  text.textContent = 'Hover over form fields or containers to highlight them';
+  
+  indicator.appendChild(cursorIcon);
+  indicator.appendChild(text);
+  
+  return indicator;
+}
+
 // Process the next notification in the queue
 async function processNextNotification(): Promise<void> {
   if (isProcessingQueue || notificationQueue.length === 0) {
@@ -63,6 +153,7 @@ async function processNextNotification(): Promise<void> {
   
   const notification = document.createElement('div');
   notification.style.cssText = `
+    position: relative;
     width: 300px;
     padding: var(--spacing-half) var(--spacing);
     border-radius: var(--border-radius);
@@ -83,11 +174,27 @@ async function processNextNotification(): Promise<void> {
     case 'error':
       notification.style.backgroundColor = 'var(--color-error)';
       break;
+    case 'persistent':
+      notification.style.backgroundColor = 'var(--color-info)';
+      notification.style.border = '2px solid var(--color-primary)';
+      break;
     default:
       notification.style.backgroundColor = 'var(--color-info)';
   }
   
   notification.textContent = queuedNotification.message;
+  
+  // Add dismiss button for persistent notifications
+  if (queuedNotification.type === 'persistent') {
+    const dismissBtn = createDismissButton(notification, queuedNotification.dismissCallback);
+    notification.appendChild(dismissBtn);
+    
+    // Add selection indicator for selection mode
+    if (queuedNotification.message.includes('Click on a form field')) {
+      const indicator = createSelectionIndicator();
+      notification.appendChild(indicator);
+    }
+  }
   
   // Add to container and active list
   notificationContainer!.appendChild(notification);
@@ -99,30 +206,32 @@ async function processNextNotification(): Promise<void> {
     notification.style.transform = 'translateX(0)';
   });
   
-
-  
-  // Remove notification after 5 seconds
-  setTimeout(() => {
-    // Animate out
-    notification.style.opacity = '0';
-    notification.style.transform = 'translateX(100%)';
-    
+  // Only auto-remove non-persistent notifications after 5 seconds
+  if (queuedNotification.type !== 'persistent') {
     setTimeout(() => {
-      removeNotification(notification);
-    }, 300);
-  }, 5000);
+      // Animate out
+      notification.style.opacity = '0';
+      notification.style.transform = 'translateX(100%)';
+      
+      setTimeout(() => {
+        removeNotification(notification);
+      }, 300);
+    }, 5000);
+  }
   
   isProcessingQueue = false;
 }
 
 // Create a queued notification system
-export function showNotification(message: string, type: NotificationType = 'info'): void {
+export function showNotification(message: string, type: NotificationType = 'info', dismissCallback?: () => void): void {
   // Add notification to queue
   const queuedNotification: QueuedNotification = {
     id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
     message,
     type,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    persistent: type === 'persistent',
+    dismissCallback
   };
   
   notificationQueue.push(queuedNotification);
@@ -131,4 +240,18 @@ export function showNotification(message: string, type: NotificationType = 'info
   if (!isProcessingQueue) {
     processNextNotification();
   }
+}
+
+// Function to dismiss all persistent notifications
+export function dismissAllPersistentNotifications(): void {
+  activeNotifications.forEach(notification => {
+    if (notification.style.border.includes('var(--color-primary)')) {
+      notification.style.opacity = '0';
+      notification.style.transform = 'translateX(100%)';
+      
+      setTimeout(() => {
+        removeNotification(notification);
+      }, 300);
+    }
+  });
 }
