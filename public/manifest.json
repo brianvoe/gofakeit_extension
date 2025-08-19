@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Gofakeit Autofill",
+  "name": "Gofakeit",
   "version": "1.0",
   "action": {
     "default_popup": "./popup.html",
@@ -9,7 +9,7 @@
       "48": "assets/images/icon48.png",
       "128": "assets/images/icon128.png"
     },
-    "default_title": "Click to autofill"
+    "default_title": "Click to generate fake data"
   },
   "icons": {
     "16": "assets/images/icon16.png",
@@ -19,10 +19,10 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["scripting", "activeTab"],
+  "permissions": ["scripting", "activeTab", "contextMenus", "storage"],
   "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [{
-    "resources": ["assets/css/styles.css", "assets/images/full.svg"],
+    "resources": ["assets/images/full.svg"],
     "matches": ["<all_urls>"]
   }],
   "commands": {
@@ -30,7 +30,7 @@
       "suggested_key": {
         "default": "Ctrl+Shift+F"
       },
-      "description": "Trigger autofill on active tab"
+      "description": "Trigger fake data generation on active tab"
     }
   }
 }

@@ -1,23 +1,14 @@
 import { defineConfig } from 'vite'
-import hotReload from 'hot-reload-extension-vite'
 import path from 'path'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 export default defineConfig({
   plugins: [
-    hotReload({
-      log: true, // set to false if you don't want console logs
-      backgroundPath: path.resolve(__dirname, 'src/background.ts'),
-    }),
     viteStaticCopy({
       targets: [
         {
           src: 'src/assets/images/*',
           dest: 'assets/images' // copies all images to dist/assets/images/
-        },
-        {
-          src: 'src/assets/css/styles.css',
-          dest: 'assets/css' // copies styles.css to dist/assets/css/
         },
         {
           src: 'src/popup.html',
@@ -33,6 +24,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    minify: false, // Disable minification for debugging
     rollupOptions: {
       input: {
         content: path.resolve(__dirname, 'src/content.ts'),

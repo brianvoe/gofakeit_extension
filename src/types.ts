@@ -1,5 +1,6 @@
 export interface GofakeitMessage {
-  command: 'autofill-all' | 'autofill-selected' | 'ping';
+  command: 'autofill-all' | 'autofill-selected' | 'ping' | 'context-menu';
+  function?: string;
 }
 
 export type NotificationType = 'success' | 'error' | 'info' | 'persistent';

@@ -1,12 +1,49 @@
 import { SelectionState } from './types';
+import { GOFAKEIT_COLORS } from './styles';
 import { showNotification, dismissAllPersistentNotifications } from './notifications';
-import { autofillElement, autofillContainer, isFormField, findFormContainer } from './autofill';
+import { autofillElement, autofillContainer } from './autofill';
 
 // Global state for selection mode
 let selectionState: SelectionState = {
   isActive: false,
   highlightedElement: null
 };
+
+// Overlay for high-visibility highlighting that won't be affected by host CSS
+let highlightOverlay: HTMLElement | null = null;
+
+function ensureHighlightOverlay(): HTMLElement {
+  if (!highlightOverlay) {
+    highlightOverlay = document.createElement('div');
+    highlightOverlay.id = 'gofakeit-highlight-overlay';
+    highlightOverlay.style.position = 'fixed';
+    highlightOverlay.style.pointerEvents = 'none';
+    highlightOverlay.style.border = `2px solid ${GOFAKEIT_COLORS.primary}`;
+    highlightOverlay.style.borderRadius = '4px';
+    highlightOverlay.style.zIndex = '2147483647';
+    highlightOverlay.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.08)';
+    highlightOverlay.style.background = 'transparent';
+    highlightOverlay.style.display = 'none';
+    document.body.appendChild(highlightOverlay);
+  }
+  return highlightOverlay;
+}
+
+function positionOverlayForElement(element: HTMLElement): void {
+  const overlay = ensureHighlightOverlay();
+  const rect = element.getBoundingClientRect();
+  overlay.style.display = 'block';
+  overlay.style.top = `${Math.max(0, rect.top)}px`;
+  overlay.style.left = `${Math.max(0, rect.left)}px`;
+  overlay.style.width = `${Math.max(0, rect.width)}px`;
+  overlay.style.height = `${Math.max(0, rect.height)}px`;
+}
+
+function hideOverlay(): void {
+  if (highlightOverlay) {
+    highlightOverlay.style.display = 'none';
+  }
+}
 
 // Enable selection mode for clicking on form containers and fields
 export function enableSelectionMode(): void {
@@ -27,6 +64,10 @@ export function enableSelectionMode(): void {
   
   // Add escape key listener to exit selection mode
   document.addEventListener('keydown', handleKeyDown);
+
+  // Keep overlay aligned on scroll/resize
+  window.addEventListener('scroll', handleReposition, true);
+  window.addEventListener('resize', handleReposition, true);
 }
 
 // Disable selection mode
@@ -42,12 +83,19 @@ export function disableSelectionMode(): void {
   document.removeEventListener('mouseout', handleMouseOut);
   document.removeEventListener('click', handleClick);
   document.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener('scroll', handleReposition, true);
+  window.removeEventListener('resize', handleReposition, true);
   
   // Remove any existing highlight
   if (selectionState.highlightedElement) {
-    selectionState.highlightedElement.style.outline = '';
     selectionState.highlightedElement = null;
   }
+  // Remove overlay
+  hideOverlay();
+  if (highlightOverlay && highlightOverlay.parentNode) {
+    highlightOverlay.parentNode.removeChild(highlightOverlay);
+  }
+  highlightOverlay = null;
   
   // Dismiss all persistent notifications
   dismissAllPersistentNotifications();
@@ -60,31 +108,21 @@ function handleMouseOver(event: MouseEvent): void {
   const target = event.target as HTMLElement;
   if (!target) return;
   
-  // Check if the target is a form field with data-gofakeit
-  if (isFormField(target)) {
+  // Check if the target is a form field candidate (respects Smart-fill setting)
+  if (isCandidateField(target)) {
     if (selectionState.highlightedElement !== target) {
-      // Remove previous highlight
-      if (selectionState.highlightedElement) {
-        selectionState.highlightedElement.style.outline = '';
-      }
-      
-      // Add new highlight to the field
-      target.style.outline = `2px solid var(--color-primary)`;
+      // Position overlay over the field
+      positionOverlayForElement(target);
       selectionState.highlightedElement = target;
     }
     return;
   }
   
-  // Find the closest container that has form fields
-  const container = findFormContainer(target);
+  // Find the closest container that has form fields (respect Smart-fill)
+  const container = findFormContainerSmart(target);
   if (container && container !== selectionState.highlightedElement) {
-    // Remove previous highlight
-    if (selectionState.highlightedElement) {
-      selectionState.highlightedElement.style.outline = '';
-    }
-    
-    // Add new highlight
-    container.style.outline = `2px solid var(--color-primary)`;
+    // Position overlay over the container
+    positionOverlayForElement(container);
     selectionState.highlightedElement = container;
   }
 }
@@ -98,8 +136,8 @@ function handleMouseOut(event: MouseEvent): void {
   
   // Only remove highlight if we're not hovering over the highlighted element or its children
   if (selectionState.highlightedElement && !selectionState.highlightedElement.contains(target)) {
-    selectionState.highlightedElement.style.outline = '';
     selectionState.highlightedElement = null;
+    hideOverlay();
   }
 }
 
@@ -114,14 +152,14 @@ async function handleClick(event: MouseEvent): Promise<void> {
   if (!target) return;
   
   // Check if clicked on a form field
-  if (isFormField(target)) {
+  if (isCandidateField(target)) {
     await autofillElement(target);
     disableSelectionMode();
     return;
   }
   
   // Check if clicked on a container
-  const container = findFormContainer(target);
+  const container = findFormContainerSmart(target);
   if (container) {
     await autofillContainer(container);
     disableSelectionMode();
@@ -135,4 +173,52 @@ function handleKeyDown(event: KeyboardEvent): void {
   if (event.key === 'Escape') {
     disableSelectionMode();
   }
+}
+
+function handleReposition(): void {
+  if (!selectionState.isActive || !selectionState.highlightedElement) return;
+  positionOverlayForElement(selectionState.highlightedElement as HTMLElement);
+}
+
+// Smart detection helpers
+let smartFillEnabledForSelection = true;
+
+function readSmartFillSetting(): void {
+  try {
+    chrome.storage.sync.get({ gofakeitSmartFill: true }, (items) => {
+      smartFillEnabledForSelection = !!items.gofakeitSmartFill;
+    });
+  } catch {
+    smartFillEnabledForSelection = true;
+  }
+}
+
+readSmartFillSetting();
+
+function isCandidateField(element: HTMLElement): boolean {
+  const tag = element.tagName;
+  const isForm = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  if (!isForm) return false;
+  if (element instanceof HTMLInputElement) {
+    if (element.type === 'hidden' || element.disabled || element.readOnly) return false;
+  }
+  if (element instanceof HTMLSelectElement) {
+    if (element.disabled) return false;
+  }
+  if (!smartFillEnabledForSelection) {
+    return element.hasAttribute('data-gofakeit');
+  }
+  return true;
+}
+
+function findFormContainerSmart(element: HTMLElement): HTMLElement | null {
+  let parent: HTMLElement | null = element;
+  while (parent) {
+    const fields = parent.querySelectorAll('input, textarea, select');
+    for (const node of Array.from(fields)) {
+      if (isCandidateField(node as HTMLElement)) return parent;
+    }
+    parent = parent.parentElement;
+  }
+  return null;
 }

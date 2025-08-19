@@ -8,3 +8,4 @@ export * from './input-number';
 export * from './input-misc';
 export * from './selection';
 export * from './notifications';
+export * from './context-menu';

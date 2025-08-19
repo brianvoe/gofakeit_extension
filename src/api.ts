@@ -74,3 +74,57 @@ export async function fetchGofakeitData(func: string): Promise<ApiResponse> {
 export async function fetchRandomString(strings: string[]): Promise<ApiResponse> {
   return makeRequest('POST', 'https://api.gofakeit.com/funcs/randomstring', { strs: strings });
 }
+
+// Types for the function list API response
+export interface FuncParam {
+  field: string;
+  display: string;
+  type: string;
+  optional: boolean;
+  default: string;
+  options: string[];
+  description: string;
+}
+
+export interface FuncInfo {
+  display: string;
+  category: string;
+  description: string;
+  example: string;
+  output: string;
+  content_type: string;
+  params: FuncParam[];
+  any: any;
+}
+
+export interface FuncListResponse {
+  success: boolean;
+  data?: Record<string, FuncInfo>;
+  error?: string;
+}
+
+// Fetch the complete list of available functions from the API
+export async function fetchFunctionList(): Promise<FuncListResponse> {
+  try {
+    const response = await fetch('https://api.gofakeit.com/funcs/list');
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `HTTP error! status: ${response.status}`
+      };
+    }
+    
+    const data = await response.json();
+    return {
+      success: true,
+      data: data
+    };
+  } catch (error) {
+    console.error('[Gofakeit] Error fetching function list:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}

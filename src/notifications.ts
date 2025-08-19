@@ -1,4 +1,5 @@
 import { NotificationType } from './types';
+import { GOFAKEIT_BORDER, GOFAKEIT_COLORS, GOFAKEIT_SPACING } from './styles';
 
 interface QueuedNotification {
   id: string;
@@ -22,13 +23,14 @@ function initNotificationContainer(): void {
     notificationContainer.id = 'gofakeit-notifications';
     notificationContainer.style.cssText = `
       position: fixed;
-      top: var(--spacing);
-      right: var(--spacing);
-      z-index: 10000;
+      top: ${GOFAKEIT_SPACING.base}px;
+      right: ${GOFAKEIT_SPACING.base}px;
+      z-index: 1000000;
       width: 300px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: ${GOFAKEIT_SPACING.quarter}px;
+      font-family: Arial, sans-serif;
     `;
     document.body.appendChild(notificationContainer);
   }
@@ -57,13 +59,12 @@ function createDismissButton(notification: HTMLElement, dismissCallback?: () => 
     position: absolute;
     top: 8px;
     right: 8px;
-    background: none;
+    background: transparent;
     border: none;
-    color: inherit;
+    color: ${GOFAKEIT_COLORS.white};
     font-size: 18px;
     cursor: pointer;
     opacity: 0.7;
-    transition: opacity 0.2s ease;
     padding: 0;
     width: 20px;
     height: 20px;
@@ -115,15 +116,15 @@ function createSelectionIndicator(): HTMLElement {
   cursorIcon.innerHTML = '👆';
   cursorIcon.style.cssText = `
     font-size: 16px;
-    animation: pulse 2s infinite;
+    animation: gofakeit-pulse 2s infinite;
   `;
   
   // Add pulse animation
   const style = document.createElement('style');
   style.textContent = `
-    @keyframes pulse {
+    @keyframes gofakeit-pulse {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); }
+      50% { transform: scale(2); }
     }
   `;
   document.head.appendChild(style);
@@ -154,12 +155,11 @@ async function processNextNotification(): Promise<void> {
   const notification = document.createElement('div');
   notification.style.cssText = `
     position: relative;
-    width: 300px;
-    padding: var(--spacing-half) var(--spacing);
-    border-radius: var(--border-radius);
-    color: var(--color-white);
-    font-family: var(--font-family);
-    font-size: var(--font-size);
+    padding: ${GOFAKEIT_SPACING.half}px ${GOFAKEIT_SPACING.base}px;
+    border-radius: ${GOFAKEIT_BORDER.radius}px;
+    color: ${GOFAKEIT_COLORS.text};
+    font-family: Arial, sans-serif;
+    font-size: 14px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     transition: all 0.3s ease;
     opacity: 0;
@@ -169,23 +169,24 @@ async function processNextNotification(): Promise<void> {
   
   switch (queuedNotification.type) {
     case 'success':
-      notification.style.backgroundColor = 'var(--color-success)';
+      notification.style.backgroundColor = GOFAKEIT_COLORS.success;
       break;
     case 'error':
-      notification.style.backgroundColor = 'var(--color-error)';
+      notification.style.backgroundColor = GOFAKEIT_COLORS.error;
       break;
     case 'persistent':
-      notification.style.backgroundColor = 'var(--color-info)';
-      notification.style.border = '2px solid var(--color-primary)';
+      notification.style.backgroundColor = GOFAKEIT_COLORS.info;
+      notification.style.border = `${GOFAKEIT_BORDER.width}px solid ${GOFAKEIT_COLORS.primary}`;
       break;
     default:
-      notification.style.backgroundColor = 'var(--color-info)';
+      notification.style.backgroundColor = GOFAKEIT_COLORS.info;
   }
   
   notification.textContent = queuedNotification.message;
   
   // Add dismiss button for persistent notifications
   if (queuedNotification.type === 'persistent') {
+    (notification as any).dataset.gofakeitPersistent = 'true';
     const dismissBtn = createDismissButton(notification, queuedNotification.dismissCallback);
     notification.appendChild(dismissBtn);
     
@@ -245,7 +246,7 @@ export function showNotification(message: string, type: NotificationType = 'info
 // Function to dismiss all persistent notifications
 export function dismissAllPersistentNotifications(): void {
   activeNotifications.forEach(notification => {
-    if (notification.style.border.includes('var(--color-primary)')) {
+    if ((notification as any).dataset && (notification as any).dataset.gofakeitPersistent === 'true') {
       notification.style.opacity = '0';
       notification.style.transform = 'translateX(100%)';
       
