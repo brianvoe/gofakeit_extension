@@ -128,3 +128,30 @@ export async function fetchFunctionList(): Promise<FuncListResponse> {
     };
   }
 }
+
+// Short function list types and fetcher
+export interface FuncShortEntry {
+  value: string; // function name
+  display: string;
+  category: string;
+}
+
+export interface FuncListShortResponse {
+  success: boolean;
+  data?: FuncShortEntry[];
+  error?: string;
+}
+
+export async function fetchFunctionListShort(): Promise<FuncListShortResponse> {
+  try {
+    const response = await fetch('https://api.gofakeit.com/funcs/list/short');
+    if (!response.ok) {
+      return { success: false, error: `HTTP error! status: ${response.status}` };
+    }
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error('[Gofakeit] Error fetching short function list:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}

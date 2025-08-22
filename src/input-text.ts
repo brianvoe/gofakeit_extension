@@ -2,7 +2,7 @@ import { fetchGofakeitData } from './api';
 import { handleError } from './autofill';
 
 // Handle text input elements (text, email, tel, password, search, url, color)
-export async function handleTextInput(element: HTMLInputElement, gofakeitFunc: string): Promise<boolean> {
+export async function handleTextInput(element: HTMLInputElement, gofakeitFunc: string): Promise<{ success: boolean, usedFunc: string }> {
   const inputType = element.type.toLowerCase();
   
   // Map input types to appropriate gofakeit functions if 'true' is passed
@@ -40,7 +40,7 @@ export async function handleTextInput(element: HTMLInputElement, gofakeitFunc: s
     if (response.status === 400) {
       handleError(element, '', functionToCall);
     }
-    return false;
+    return { success: false, usedFunc: functionToCall };
   }
   
   element.value = response.data!;
@@ -49,11 +49,11 @@ export async function handleTextInput(element: HTMLInputElement, gofakeitFunc: s
   element.dispatchEvent(new Event('input', { bubbles: true }));
   element.dispatchEvent(new Event('change', { bubbles: true }));
   
-  return true;
+  return { success: true, usedFunc: functionToCall };
 }
 
 // Handle textarea elements
-export async function handleTextarea(element: HTMLTextAreaElement, gofakeitFunc: string): Promise<boolean> {
+export async function handleTextarea(element: HTMLTextAreaElement, gofakeitFunc: string): Promise<{ success: boolean, usedFunc: string }> {
   // Use sentence function if 'true' is passed, otherwise use the provided function
   const functionToCall = gofakeitFunc === 'true' ? 'sentence' : gofakeitFunc;
   const response = await fetchGofakeitData(functionToCall);
@@ -64,7 +64,7 @@ export async function handleTextarea(element: HTMLTextAreaElement, gofakeitFunc:
     if (response.status === 400) {
       handleError(element, '', functionToCall);
     }
-    return false;
+    return { success: false, usedFunc: functionToCall };
   }
   
   element.value = response.data!;
@@ -73,5 +73,5 @@ export async function handleTextarea(element: HTMLTextAreaElement, gofakeitFunc:
   element.dispatchEvent(new Event('input', { bubbles: true }));
   element.dispatchEvent(new Event('change', { bubbles: true }));
   
-  return true;
+  return { success: true, usedFunc: functionToCall };
 }

@@ -2,13 +2,13 @@ import { fetchGofakeitData, fetchRandomString } from './api';
 import { handleError } from './autofill';
 
 // Handle checkbox input elements
-export async function handleCheckbox(element: HTMLInputElement, gofakeitFunc: string): Promise<boolean> {
+export async function handleCheckbox(element: HTMLInputElement, gofakeitFunc: string): Promise<{ success: boolean, usedFunc: string }> {
   // Find the checkbox group by name
   const checkboxGroup = findCheckboxGroup(element);
   
   if (checkboxGroup.length === 0) {
     console.warn('[Gofakeit Autofill] No checkbox group found for element:', element);
-    return false;
+    return { success: false, usedFunc: 'bool' };
   }
   
   // Use boolean function if 'true' is passed, otherwise use the provided function
@@ -55,7 +55,7 @@ export async function handleCheckbox(element: HTMLInputElement, gofakeitFunc: st
       if (response.status === 400) {
         handleError(element, '', functionToCall);
       }
-      return false;
+      return { success: false, usedFunc: functionToCall };
     }
     
     // Clear all checkboxes first
@@ -74,17 +74,17 @@ export async function handleCheckbox(element: HTMLInputElement, gofakeitFunc: st
     });
   }
   
-  return true;
+  return { success: true, usedFunc: functionToCall };
 }
 
 // Handle radio input elements
-export async function handleRadio(element: HTMLInputElement, gofakeitFunc: string): Promise<boolean> {
+export async function handleRadio(element: HTMLInputElement, gofakeitFunc: string): Promise<{ success: boolean, usedFunc: string }> {
   // Find the radio group by name
   const radioGroup = findRadioGroup(element);
   
   if (radioGroup.length === 0) {
     console.warn('[Gofakeit Autofill] No radio group found for element:', element);
-    return false;
+    return { success: false, usedFunc: 'bool' };
   }
   
   // Use boolean function if 'true' is passed, otherwise use the provided function
@@ -118,7 +118,7 @@ export async function handleRadio(element: HTMLInputElement, gofakeitFunc: strin
       if (response.status === 400) {
         handleError(element, '', functionToCall);
       }
-      return false;
+      return { success: false, usedFunc: functionToCall };
     }
     
     // Clear all radio buttons first
@@ -146,7 +146,7 @@ export async function handleRadio(element: HTMLInputElement, gofakeitFunc: strin
     }
   }
   
-  return true;
+  return { success: true, usedFunc: functionToCall };
 }
 
 // Helper function to find checkbox group
@@ -184,12 +184,12 @@ function findRadioGroup(element: HTMLInputElement): HTMLInputElement[] {
 }
 
 // Handle select dropdown
-export async function handleSelectWithFunction(element: HTMLSelectElement, gofakeitFunc: string): Promise<boolean> {
+export async function handleSelectWithFunction(element: HTMLSelectElement, gofakeitFunc: string): Promise<{ success: boolean, usedFunc: string }> {
   const options = Array.from(element.options).map(option => option.value).filter(value => value !== '');
   
   if (options.length === 0) {
     console.warn('[Gofakeit Autofill] Select element has no valid options:', element);
-    return false;
+    return { success: false, usedFunc: gofakeitFunc };
   }
   
   let response;
@@ -206,7 +206,7 @@ export async function handleSelectWithFunction(element: HTMLSelectElement, gofak
     if (response.status === 400) {
       handleError(element, 'Failed to get selection');
     }
-    return false;
+    return { success: false, usedFunc: gofakeitFunc };
   }
   
   if (element.multiple) {
@@ -242,5 +242,5 @@ export async function handleSelectWithFunction(element: HTMLSelectElement, gofak
   }
   
   element.dispatchEvent(new Event('change', { bubbles: true }));
-  return true;
+  return { success: true, usedFunc: gofakeitFunc === 'true' ? 'random' : gofakeitFunc };
 }
