@@ -1,5 +1,5 @@
 import { NotificationType } from './types';
-import { GOFAKEIT_BORDER, GOFAKEIT_COLORS, GOFAKEIT_SPACING } from './styles';
+import { GOFAKEIT_BORDER, GOFAKEIT_COLORS, GOFAKEIT_SPACING, GOFAKEIT_FONT, GOFAKEIT_TIMING, GOFAKEIT_ZINDEX, GOFAKEIT_SIZES } from './styles';
 
 interface QueuedNotification {
   id: string;
@@ -22,15 +22,16 @@ function initNotificationContainer(): void {
     notificationContainer = document.createElement('div');
     notificationContainer.id = 'gofakeit-notifications';
     notificationContainer.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
       position: fixed;
       top: ${GOFAKEIT_SPACING.base}px;
       right: ${GOFAKEIT_SPACING.base}px;
-      z-index: 1000000;
-      width: 300px;
-      display: flex;
-      flex-direction: column;
+      z-index: ${GOFAKEIT_ZINDEX.notification};
+      width: ${GOFAKEIT_SIZES.notificationWidth}px;
       gap: ${GOFAKEIT_SPACING.quarter}px;
-      font-family: Arial, sans-serif;
+      font-family: ${GOFAKEIT_FONT.family};
     `;
     document.body.appendChild(notificationContainer);
   }
@@ -56,19 +57,19 @@ function createDismissButton(notification: HTMLElement, dismissCallback?: () => 
   const dismissBtn = document.createElement('button');
   dismissBtn.innerHTML = '&times;';
   dismissBtn.style.cssText = `
+    display: flex;
     position: absolute;
     top: 8px;
     right: 8px;
     background: transparent;
     border: none;
     color: ${GOFAKEIT_COLORS.white};
-    font-size: 18px;
+    font-size: ${GOFAKEIT_FONT.size + 4}px;
     cursor: pointer;
     opacity: 0.7;
     padding: 0;
     width: 20px;
     height: 20px;
-    display: flex;
     align-items: center;
     justify-content: center;
   `;
@@ -91,7 +92,7 @@ function createDismissButton(notification: HTMLElement, dismissCallback?: () => 
       if (dismissCallback) {
         dismissCallback();
       }
-    }, 300);
+    }, GOFAKEIT_TIMING.medium);
   });
   
   return dismissBtn;
@@ -103,19 +104,19 @@ function createSelectionIndicator(): HTMLElement {
   indicator.style.cssText = `
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-    padding: 8px;
+    gap: ${GOFAKEIT_SPACING.quarter}px;
+    margin-top: ${GOFAKEIT_SPACING.quarter}px;
+    padding: ${GOFAKEIT_SPACING.quarter}px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
-    font-size: 12px;
+    font-size: ${GOFAKEIT_FONT.size - 2}px;
   `;
   
   // Create cursor icon
   const cursorIcon = document.createElement('div');
   cursorIcon.innerHTML = '👆';
   cursorIcon.style.cssText = `
-    font-size: 16px;
+    font-size: ${GOFAKEIT_FONT.size + 2}px;
     animation: gofakeit-pulse 2s infinite;
   `;
   
@@ -158,8 +159,8 @@ async function processNextNotification(): Promise<void> {
     padding: ${GOFAKEIT_SPACING.half}px ${GOFAKEIT_SPACING.base}px;
     border-radius: ${GOFAKEIT_BORDER.radius}px;
     color: ${GOFAKEIT_COLORS.text};
-    font-family: Arial, sans-serif;
-    font-size: 14px;
+    font-family: ${GOFAKEIT_FONT.family};
+    font-size: ${GOFAKEIT_FONT.size}px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     transition: all 0.3s ease;
     opacity: 0;
@@ -216,8 +217,8 @@ async function processNextNotification(): Promise<void> {
       
       setTimeout(() => {
         removeNotification(notification);
-      }, 300);
-    }, 5000);
+      }, GOFAKEIT_TIMING.medium);
+    }, GOFAKEIT_TIMING.slow);
   }
   
   isProcessingQueue = false;
@@ -252,7 +253,7 @@ export function dismissAllPersistentNotifications(): void {
       
       setTimeout(() => {
         removeNotification(notification);
-      }, 300);
+      }, GOFAKEIT_TIMING.medium);
     }
   });
 }

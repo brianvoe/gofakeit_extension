@@ -1,7 +1,7 @@
-import { fetchFunctionList, FuncInfo } from './api';
+import { getFuncs, type Func } from 'gofakeit';
 
 // Cache for the function list to avoid repeated API calls
-let functionListCache: Record<string, FuncInfo> | null = null;
+let functionListCache: Func[] | null = null;
 let functionListCacheTime: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -15,34 +15,34 @@ export async function getFunctionsByCategory(): Promise<Record<string, Record<st
   }
   
   // Fetch fresh data from API
-  const response = await fetchFunctionList();
-  
-  if (!response.success || !response.data) {
-    console.error('[Gofakeit] Failed to fetch function list:', response.error);
+  try {
+    const functions = await getFuncs();
+    
+    // Cache the data
+    functionListCache = functions;
+    functionListCacheTime = now;
+    
+    return organizeFunctionsByCategory(functions);
+  } catch (error) {
+    console.error('[Gofakeit] Failed to fetch function list:', error);
     // Return empty object if API fails
     return {};
   }
-  
-  // Cache the data
-  functionListCache = response.data;
-  functionListCacheTime = now;
-  
-  return organizeFunctionsByCategory(response.data);
 }
 
 // Organize functions by category
-function organizeFunctionsByCategory(funcList: Record<string, FuncInfo>): Record<string, Record<string, string>> {
+function organizeFunctionsByCategory(funcList: Func[]): Record<string, Record<string, string>> {
   const categories: Record<string, Record<string, string>> = {};
   
-  Object.entries(funcList).forEach(([funcName, funcInfo]) => {
-    const category = funcInfo.category || 'Other';
-    const displayName = funcInfo.display || funcName;
+  funcList.forEach((func) => {
+    const category = func.category || 'Other';
+    const displayName = func.display || func.value;
     
     if (!categories[category]) {
       categories[category] = {};
     }
     
-    categories[category][funcName] = displayName;
+    categories[category][func.value] = displayName;
   });
   
   return categories;

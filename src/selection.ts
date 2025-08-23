@@ -1,5 +1,5 @@
 import { SelectionState } from './types';
-import { GOFAKEIT_COLORS } from './styles';
+import { GOFAKEIT_COLORS, GOFAKEIT_BORDER, GOFAKEIT_ZINDEX } from './styles';
 import { showNotification, dismissAllPersistentNotifications } from './notifications';
 import { autofillElement, autofillContainer } from './autofill';
 
@@ -18,9 +18,9 @@ function ensureHighlightOverlay(): HTMLElement {
     highlightOverlay.id = 'gofakeit-highlight-overlay';
     highlightOverlay.style.position = 'fixed';
     highlightOverlay.style.pointerEvents = 'none';
-    highlightOverlay.style.border = `2px solid ${GOFAKEIT_COLORS.primary}`;
-    highlightOverlay.style.borderRadius = '4px';
-    highlightOverlay.style.zIndex = '2147483647';
+    highlightOverlay.style.border = `${GOFAKEIT_BORDER.width}px solid ${GOFAKEIT_COLORS.primary}`;
+    highlightOverlay.style.borderRadius = `${GOFAKEIT_BORDER.radius}px`;
+    highlightOverlay.style.zIndex = GOFAKEIT_ZINDEX.badge.toString();
     highlightOverlay.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.08)';
     highlightOverlay.style.background = 'transparent';
     highlightOverlay.style.display = 'none';
