@@ -1,22 +1,25 @@
 import { defineConfig } from 'vite'
-import path from 'path'
+import webExtension from 'vite-plugin-web-extension'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
+
+const target = process.env.TARGET || 'chrome'
 
 export default defineConfig({
   plugins: [
+    webExtension({
+      manifest: './src/manifest.json',
+      watchFilePaths: [
+        'src/**/*'
+      ],
+      disableAutoLaunch: true,
+      // Build for specific browser based on TARGET env var
+      browser: target,
+    }),
     viteStaticCopy({
       targets: [
         {
-          src: 'src/assets/images/*',
-          dest: 'assets/images' // copies all images to dist/assets/images/
-        },
-        {
-          src: 'src/popup.html',
-          dest: '.' // copies popup.html to dist/popup.html
-        },
-        {
-          src: 'public/manifest.json',
-          dest: '.' // copies manifest.json to dist/
+          src: 'src/assets/**/*',
+          dest: 'assets'
         }
       ]
     })
@@ -24,17 +27,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    minify: false, // Disable minification for debugging
-    rollupOptions: {
-      input: {
-        content: path.resolve(__dirname, 'src/content.ts'),
-        background: path.resolve(__dirname, 'src/background.ts'),
-        popup: path.resolve(__dirname, 'src/popup.ts')
-      },
-      output: {
-        format: 'es',
-        entryFileNames: '[name].js'
-      }
-    }
+    minify: false // Disable minification for debugging
+  },
+  define: {
+    __BROWSER__: JSON.stringify(target),
   }
 })
