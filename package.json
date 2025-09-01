@@ -8,7 +8,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "gofakeit": "^1.0.0"
+    "gofakeit": "^1.3.2"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.1",
