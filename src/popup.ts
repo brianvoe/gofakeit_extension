@@ -21,7 +21,7 @@ async function injectContentScriptIfNeeded(tabId: number): Promise<void> {
   }
 }
 
-async function sendCommand(command: string): Promise<void> {
+const sendCommand = async (command: string) => {
   try {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const tab = tabs[0];
@@ -40,7 +40,7 @@ async function sendCommand(command: string): Promise<void> {
   } catch (error) {
     console.error('Error sending command:', error);
   }
-}
+};
 
 // Set the correct SVG URL for the logo
 const logoImg = document.querySelector('.header img') as HTMLImageElement;
