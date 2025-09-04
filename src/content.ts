@@ -1,21 +1,35 @@
-import { GofakeitMessage } from './types';
 import { autofillAll, autofillElement } from './autofill';
 import { enableSelectionMode } from './selection';
 import { showNotification } from './notifications';
 
-// Do not inject shared stylesheet into pages to avoid style conflicts
-function injectCSSStyles(): void {
-  // Intentionally left blank
+// Message interface for communication between popup and content script
+interface GofakeitMessage {
+  command: 'autofill-all' | 'autofill-selected' | 'ping' | 'context-menu';
+  function?: string;
 }
 
 // Handle context menu function application
 async function handleContextMenuFunction(funcName: string): Promise<void> {
   try {
-    // Only target the currently focused element
-    const targetElement = document.activeElement;
+    // Use the last right-clicked element if available
+    let targetElement = lastRightClickedElement;
+    
+    // Fallback to focused element if no right-clicked element
+    if (!targetElement || !isFormElement(targetElement)) {
+      targetElement = document.activeElement as HTMLElement;
+    }
+    
+    // Final fallback: find any form element
+    if (!targetElement || !isFormElement(targetElement)) {
+      const allFormElements = document.querySelectorAll('input, textarea, select');
+      if (allFormElements.length > 0) {
+        targetElement = allFormElements[0] as HTMLElement;
+        targetElement.focus();
+      }
+    }
     
     if (!targetElement || !isFormElement(targetElement)) {
-      showNotification('Please focus on a form field first, then right-click to apply the function', 'error');
+      showNotification('Please right-click on a form field to apply the function', 'error');
       return;
     }
     
@@ -55,11 +69,13 @@ function isFormElement(element: Element): boolean {
     (window as any).gofakeitExtensionInjected = true;
   }
 
-  // Do not inject global CSS into the host page
-  injectCSSStyles();
-
-  // Log to verify it only runs when injected
-  console.log('[Gofakeit Autofill] Content script injected');
+  // Track right-clicks on form elements
+  document.addEventListener('contextmenu', (event) => {
+    const target = event.target as HTMLElement;
+    if (isFormElement(target)) {
+      lastRightClickedElement = target;
+    }
+  }, true);
 
   // Message listener for handling commands from popup
   chrome.runtime.onMessage.addListener(async (msg: GofakeitMessage, _sender, _sendResponse) => {

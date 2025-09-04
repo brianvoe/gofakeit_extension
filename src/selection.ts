@@ -1,7 +1,11 @@
-import { SelectionState } from './types';
-import { GOFAKEIT_COLORS, GOFAKEIT_BORDER, GOFAKEIT_ZINDEX } from './styles';
 import { showNotification, dismissAllPersistentNotifications } from './notifications';
 import { autofillElement, autofillContainer } from './autofill';
+
+// Selection state interface
+interface SelectionState {
+  isActive: boolean;
+  highlightedElement: HTMLElement | null;
+}
 
 // Global state for selection mode
 let selectionState: SelectionState = {
@@ -16,14 +20,16 @@ function ensureHighlightOverlay(): HTMLElement {
   if (!highlightOverlay) {
     highlightOverlay = document.createElement('div');
     highlightOverlay.id = 'gofakeit-highlight-overlay';
-    highlightOverlay.style.position = 'fixed';
-    highlightOverlay.style.pointerEvents = 'none';
-    highlightOverlay.style.border = `${GOFAKEIT_BORDER.width}px solid ${GOFAKEIT_COLORS.primary}`;
-    highlightOverlay.style.borderRadius = `${GOFAKEIT_BORDER.radius}px`;
-    highlightOverlay.style.zIndex = GOFAKEIT_ZINDEX.badge.toString();
-    highlightOverlay.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.08)';
-    highlightOverlay.style.background = 'transparent';
-    highlightOverlay.style.display = 'none';
+    highlightOverlay.style.cssText = `
+      position: fixed;
+      pointer-events: none;
+      border: 2px solid #ffa000;
+      border-radius: 6px;
+      z-index: 2147483647;
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+      background: transparent;
+      display: none;
+    `;
     document.body.appendChild(highlightOverlay);
   }
   return highlightOverlay;

@@ -1,6 +1,3 @@
-// Self-contained background script for Chrome extension
-// No imports to avoid module issues
-
 // Cache for the function list to avoid repeated API calls
 let functionListCache: any = null;
 let functionListCacheTime: number = 0;
@@ -192,7 +189,7 @@ async function handleContextMenuClick(info: chrome.contextMenus.OnClickData, tab
       // First, try to inject the content script if it's not already loaded
       await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        files: ['content.js']
+        files: ['src/content.js']
       });
       
       // Wait a moment for the script to initialize
@@ -225,7 +222,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 // Check if content script is already injected
-export async function isContentScriptInjected(tabId: number): Promise<boolean> {
+async function isContentScriptInjected(tabId: number): Promise<boolean> {
   try {
     await chrome.tabs.sendMessage(tabId, { command: 'ping' });
     return true;
@@ -235,12 +232,12 @@ export async function isContentScriptInjected(tabId: number): Promise<boolean> {
 }
 
 // Inject content script if not already injected
-export async function injectContentScriptIfNeeded(tabId: number): Promise<void> {
+async function injectContentScriptIfNeeded(tabId: number): Promise<void> {
   const isInjected = await isContentScriptInjected(tabId);
   if (!isInjected) {
     await chrome.scripting.executeScript({
       target: { tabId },
-      files: ['content.js']
+      files: ['src/content.js']
     });
   }
 }

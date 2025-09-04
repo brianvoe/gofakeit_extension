@@ -1,0 +1,396 @@
+/* Gofakeit Extension Popup Styles */
+
+/* ===== Base Styles ===== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--gfi-font-family);
+  font-size: var(--gfi-font-size);
+  background: var(--gfi-color-background);
+  color: var(--gfi-color-font);
+  width: 400px;
+  min-height: 500px;
+  overflow-x: hidden;
+}
+
+/* ===== Container Layout ===== */
+.container {
+  padding: var(--gfi-spacing-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gfi-spacing-base);
+}
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: var(--gfi-spacing-base);
+  border-bottom: 1px solid var(--gfi-border);
+
+  img {
+    height: 40px;
+    width: auto;
+  }
+}
+
+/* ===== Section Layout ===== */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gfi-spacing-half);
+
+  .section-header {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--gfi-white);
+    margin: 0;
+    letter-spacing: 1px;
+  }
+}
+
+/* ===== Actions ===== */
+.actions {
+  display: flex;
+  gap: var(--gfi-spacing-half);
+  flex-wrap: wrap;
+}
+
+/* ===== Buttons ===== */
+button,
+.btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  height: var(--gfi-input-height);
+  min-height: var(--gfi-input-height);
+  width: auto;
+  justify-content: center;
+  align-items: center;
+  gap: var(--gfi-spacing-quarter);
+  color: var(--gfi-btn-color);
+  font-size: var(--gfi-font-size);
+  font-weight: bold;
+  padding: var(--gfi-spacing-quarter) var(--gfi-spacing-half);
+  cursor: pointer;
+  background-color: var(--gfi-primary);
+  text-align: center;
+  user-select: none;
+  white-space: nowrap;
+  border: none;
+  border-radius: var(--gfi-border-radius);
+  vertical-align: middle;
+  box-shadow: 0 0 0 0 transparent rgba(0, 0, 0, 0);
+  transition: all var(--gfi-timing-medium) ease;
+
+  &:hover {
+    background-color: var(--gfi-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  &:disabled {
+    background-color: var(--gfi-color-background);
+    color: var(--gfi-color-disabled);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Button Variants */
+  &.primary {
+    background-color: var(--gfi-primary);
+  }
+
+  &.secondary {
+    background-color: var(--gfi-secondary);
+  }
+}
+
+/* ===== Toggle Switch ===== */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-half);
+  cursor: pointer;
+  user-select: none;
+
+  input[type="checkbox"] {
+    display: none;
+  }
+
+  .toggle-track {
+    position: relative;
+    width: 46px;
+    height: 24px;
+    background: #444;
+    border-radius: 999px;
+    transition: background var(--gfi-timing-medium) ease;
+    box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.2);
+
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform var(--gfi-timing-medium) ease, background var(--gfi-timing-medium) ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  input[type="checkbox"]:checked + .toggle-track {
+    background: var(--gfi-primary);
+
+    .toggle-thumb {
+      transform: translateX(22px);
+    }
+  }
+
+  .toggle-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gfi-white);
+  }
+}
+
+/* ===== Footer ===== */
+.footer {
+  margin-top: auto;
+  padding-top: var(--gfi-spacing-base);
+  border-top: 1px solid var(--gfi-border);
+  text-align: center;
+  font-size: 12px;
+  color: var(--gfi-color-light);
+
+  a {
+    color: var(--gfi-primary);
+    text-decoration: none;
+    transition: all var(--gfi-timing-medium) ease;
+
+    &:hover {
+      text-decoration: underline;
+      filter: brightness(110%);
+    }
+  }
+}
+
+/* ===== Modal Styles ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--gfi-timing-medium) ease;
+
+  &.active {
+    opacity: 1;
+    visibility: visible;
+
+    .modal-content {
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .modal-content {
+    background: var(--gfi-color-background);
+    border-radius: var(--gfi-border-radius);
+    padding: var(--gfi-spacing-base);
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+    transform: scale(0.9) translateY(20px);
+    transition: all var(--gfi-timing-medium) ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--gfi-spacing-base);
+    padding-bottom: var(--gfi-spacing-half);
+    border-bottom: 1px solid var(--gfi-border);
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--gfi-color-font);
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all var(--gfi-timing-fast) ease;
+
+    &:hover {
+      background: var(--gfi-border);
+    }
+  }
+}
+
+/* ===== Password Generator ===== */
+.password-generator {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gfi-spacing-half);
+
+  .password-display {
+    display: flex;
+    gap: var(--gfi-spacing-half);
+    align-items: center;
+
+    #password-output {
+      flex: 1;
+      padding: var(--gfi-spacing-half);
+      border: 1px solid var(--gfi-border);
+      border-radius: var(--gfi-border-radius);
+      background: var(--gfi-color-background);
+      color: var(--gfi-color-font);
+      font-family: monospace;
+      font-size: 14px;
+    }
+
+    #copy-password {
+      flex: 0 0 auto;
+      padding: var(--gfi-spacing-half) var(--gfi-spacing-base);
+    }
+  }
+
+  .password-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gfi-spacing-half);
+
+    .option-group {
+      display: flex;
+      align-items: center;
+      gap: var(--gfi-spacing-half);
+      flex-wrap: wrap;
+
+      label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        cursor: pointer;
+
+        input[type="checkbox"] {
+          margin: 0;
+        }
+      }
+
+      input[type="range"] {
+        flex: 1;
+        min-width: 100px;
+      }
+
+      span {
+        min-width: 30px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--gfi-color-light);
+      }
+    }
+  }
+}
+
+/* ===== UUID Generator ===== */
+.uuid-generator {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gfi-spacing-half);
+
+  .uuid-display {
+    display: flex;
+    gap: var(--gfi-spacing-half);
+    align-items: center;
+
+    #uuid-output {
+      flex: 1;
+      padding: var(--gfi-spacing-half);
+      border: 1px solid var(--gfi-border);
+      border-radius: var(--gfi-border-radius);
+      background: var(--gfi-color-background);
+      color: var(--gfi-color-font);
+      font-family: monospace;
+      font-size: 14px;
+    }
+
+    #copy-uuid {
+      flex: 0 0 auto;
+      padding: var(--gfi-spacing-half) var(--gfi-spacing-base);
+    }
+  }
+
+  .uuid-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gfi-spacing-half);
+
+    .uuid-option-group {
+      display: flex;
+      align-items: center;
+      gap: var(--gfi-spacing-half);
+
+      label {
+        font-size: 12px;
+        color: var(--gfi-color-light);
+      }
+
+      select {
+        padding: var(--gfi-spacing-quarter);
+        border: 1px solid var(--gfi-border);
+        border-radius: var(--gfi-border-radius);
+        background: var(--gfi-color-background);
+        color: var(--gfi-color-font);
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 480px) {
+  .container {
+    padding: var(--gfi-spacing-half);
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

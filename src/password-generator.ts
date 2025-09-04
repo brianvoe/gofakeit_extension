@@ -1,5 +1,3 @@
-import { GOFAKEIT_COLORS, GOFAKEIT_TIMING } from './styles';
-
 // Password Generator functionality
 export class PasswordGenerator {
   private modal: HTMLElement;
@@ -103,7 +101,7 @@ export class PasswordGenerator {
     
     if (!hasValidOptions) {
       this.passwordOutput.value = 'Please select at least one character type';
-      this.passwordOutput.style.color = GOFAKEIT_COLORS.error;
+      this.passwordOutput.style.color = 'var(--gofakeit-error)';
     } else {
       this.passwordOutput.style.color = '';
     }
@@ -135,7 +133,7 @@ export class PasswordGenerator {
     } catch (error) {
       console.error('[Gofakeit] Error generating password:', error);
       this.passwordOutput.value = 'Error generating password';
-      this.passwordOutput.style.color = GOFAKEIT_COLORS.error;
+      this.passwordOutput.style.color = 'var(--gofakeit-error)';
     }
   }
 
@@ -150,21 +148,21 @@ export class PasswordGenerator {
       // Visual feedback
       const originalText = this.copyBtn.textContent;
       this.copyBtn.textContent = 'Copied!';
-      this.copyBtn.style.backgroundColor = GOFAKEIT_COLORS.success;
+      this.copyBtn.style.backgroundColor = 'var(--gofakeit-success)';
       
       setTimeout(() => {
         this.copyBtn.textContent = originalText;
         this.copyBtn.style.backgroundColor = '';
-      }, GOFAKEIT_TIMING.fast);
+      }, 200);
     } catch (error) {
       console.error('Failed to copy password:', error);
       this.copyBtn.textContent = 'Failed';
-      this.copyBtn.style.backgroundColor = GOFAKEIT_COLORS.error;
+      this.copyBtn.style.backgroundColor = 'var(--gofakeit-error)';
       
       setTimeout(() => {
         this.copyBtn.textContent = 'Copy';
         this.copyBtn.style.backgroundColor = '';
-      }, GOFAKEIT_TIMING.fast);
+      }, 200);
     }
   }
 }

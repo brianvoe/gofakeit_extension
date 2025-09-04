@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Chrome extension to generate fake data using the Gofakeit API",
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "npm run build:chrome && npm run build:firefox",
+    "dev": "npm run clean && vite build --watch",
+    "build": "npm run build:chrome",
     "build:chrome": "TARGET=chrome vite build",
     "build:firefox": "TARGET=firefox vite build",
     "clean": "rm -rf dist"
