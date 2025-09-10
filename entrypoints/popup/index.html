@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gofakeit</title>
+    <link rel="stylesheet" href="variables.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img src="assets/images/full.svg" alt="Gofakeit Logo" />
+      </div>
+
+      <div class="section">
+        <div class="actions">
+          <button id="open-password-modal" class="btn secondary">
+            Password
+          </button>
+          <button id="open-uuid-modal" class="btn secondary">UUID</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-header">Autofill</h2>
+        <label class="toggle" for="toggle-fallback">
+          <input type="checkbox" id="toggle-fallback" />
+          <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+          </span>
+          <span class="toggle-label">Smart-fill</span>
+        </label>
+        <div class="actions">
+          <button id="autofill-all" class="btn primary">All</button>
+          <button id="autofill-selected" class="btn secondary">Selected</button>
+        </div>
+      </div>
+
+      <!-- Password Generator Modal -->
+      <div id="password-modal" class="modal-overlay">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Password Generator</h2>
+            <button id="close-password-modal" class="modal-close">
+              &times;
+            </button>
+          </div>
+          <div class="password-generator">
+            <div class="password-display">
+              <input
+                type="text"
+                id="password-output"
+                readonly
+                placeholder="Click Generate to create a password"
+              />
+              <button
+                id="copy-password"
+                class="btn secondary"
+                title="Copy to clipboard"
+              >
+                Copy
+              </button>
+            </div>
+            <div class="password-options">
+              <div class="option-group">
+                <label for="password-length">Length:</label>
+                <input
+                  type="range"
+                  id="password-length"
+                  min="1"
+                  max="100"
+                  value="12"
+                />
+                <span id="length-value">12</span>
+              </div>
+              <div class="option-group">
+                <label>
+                  <input type="checkbox" id="include-uppercase" checked />
+                  Uppercase (A-Z)
+                </label>
+                <label>
+                  <input type="checkbox" id="include-lowercase" checked />
+                  Lowercase (a-z)
+                </label>
+                <label>
+                  <input type="checkbox" id="include-numbers" checked />
+                  Numbers (0-9)
+                </label>
+                <label>
+                  <input type="checkbox" id="include-symbols" checked />
+                  Symbols (!@#$%^&*)
+                </label>
+              </div>
+            </div>
+            <div class="actions">
+              <button id="generate-password" class="btn primary">
+                Generate Password
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UUID Generator Modal -->
+      <div id="uuid-modal" class="modal-overlay">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>UUID Generator</h2>
+            <button id="close-uuid-modal" class="modal-close">&times;</button>
+          </div>
+          <div class="password-generator">
+            <div class="password-display">
+              <input
+                type="text"
+                id="uuid-output"
+                readonly
+                placeholder="Click Generate to create a UUID"
+              />
+              <button
+                id="copy-uuid"
+                class="btn secondary"
+                title="Copy to clipboard"
+              >
+                Copy
+              </button>
+            </div>
+            <div class="password-options">
+              <div class="option-group">
+                <label for="uuid-version">Version:</label>
+                <select id="uuid-version">
+                  <option value="1">Version 1 (Time-based)</option>
+                  <option value="4" selected>Version 4 (Random)</option>
+                </select>
+              </div>
+            </div>
+            <div class="actions">
+              <button id="generate-uuid" class="btn primary">
+                Generate UUID
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-text">
+          <a href="https://gofakeit.com" target="_blank">Powered by Gofakeit</a>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="main.ts"></script>
+  </body>
+</html>

@@ -1,6 +1,4 @@
-import { 
-  autofill as gofakeitAutofill
-} from 'gofakeit';
+import { autofill as gofakeitAutofill } from 'gofakeit';
 import { showNotification } from './notifications';
 
 // Use the gofakeit package's showFieldError if available, otherwise use a fallback
@@ -16,9 +14,13 @@ const showFieldError = ((element: Element, message: string) => {
 async function isSmartFillEnabled(): Promise<boolean> {
   return new Promise((resolve) => {
     try {
-      chrome.storage.sync.get({ gofakeitSmartFill: true }, (items) => {
-        resolve(!!items.gofakeitSmartFill);
-      });
+      if (typeof chrome !== 'undefined' && chrome.storage) {
+        chrome.storage.sync.get({ gofakeitSmartFill: true }, (items) => {
+          resolve(!!items.gofakeitSmartFill);
+        });
+      } else {
+        resolve(true); // Default to enabled if Chrome API not available
+      }
     } catch {
       resolve(false);
     }
@@ -93,10 +95,10 @@ export async function autofillContainer(container: HTMLElement): Promise<void> {
 // Handle error display and field highlighting
 export function handleError(element: Element, error: string, functionName?: string): void {
   if (element instanceof HTMLElement) {
-    element.style.border = '2px solid #ff4444';
+    element.classList.add('error-highlight');
     
     setTimeout(() => {
-      element.style.border = '';
+      element.classList.remove('error-highlight');
     }, 3000);
   }
   

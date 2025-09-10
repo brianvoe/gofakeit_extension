@@ -1,0 +1,37 @@
+/* Gofakeit Extension CSS Variables */
+:root {
+  /* ===== Base Colors ===== */
+  --gfi-primary: #ffa000;
+  --gfi-secondary: #ffc107;
+  --gfi-white: #ffffff;
+  --gfi-success: #48c774;
+  --gfi-warning: #ffdd57;
+  --gfi-error: #ff3860;
+  --gfi-info: #209cee;
+  --gfi-text: #ffffff;
+  --gfi-border: #686868;
+
+  /* ===== Spacing ===== */
+  --gfi-spacing-base: 24px;
+  --gfi-spacing-half: 12px;
+  --gfi-spacing-quarter: 8px;
+
+  /* ===== Border ===== */
+  --gfi-border-radius: 6px;
+
+  /* ===== Font ===== */
+  --gfi-font-size: 14px;
+  --gfi-font-family: "Helvetica, Arial, sans-serif";
+
+  /* ===== Sizes ===== */
+  --gfi-input-height: 35px;
+
+  /* ===== Popup Colors ===== */
+  --gfi-color-light: #a3a3a3;
+  --gfi-color-disabled: #8e8e8e;
+  --gfi-color-background: #22272e;
+  --gfi-color-font: #8b9eb0;
+
+  /* ===== Popup Button Colors ===== */
+  --gfi-btn-color: #333333;
+}

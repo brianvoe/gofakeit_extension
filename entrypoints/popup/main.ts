@@ -1,4 +1,5 @@
 import { PasswordGenerator } from './password-generator';
+import { UuidGenerator } from './uuid-generator';
 
 // Check if content script is already injected
 async function isContentScriptInjected(tabId: number): Promise<boolean> {
@@ -33,7 +34,7 @@ const sendCommand = async (command: string) => {
       await chrome.tabs.sendMessage(tab.id, { command });
       
       // Close the popup for interactive commands
-      if (command === 'autofill-selected' || command === 'autofill-all') {
+      if (command === 'autofill-all' || command === 'autofill-selected') {
         window.close();
       }
     }
@@ -65,3 +66,6 @@ if (fallbackToggle) {
 
 // Initialize password generator
 new PasswordGenerator();
+
+// Initialize UUID generator
+new UuidGenerator();

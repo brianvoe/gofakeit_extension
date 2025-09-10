@@ -1,6 +1,3 @@
-// Self-contained background script for Chrome extension
-// No imports to avoid module issues
-
 // Cache for the function list to avoid repeated API calls
 let functionListCache: any = null;
 let functionListCacheTime: number = 0;
@@ -33,7 +30,7 @@ async function fetchFunctionList(): Promise<any> {
 }
 
 // Get functions organized by category from the API
-async function getFunctionsByCategory(): Promise<{ popular: Record<string, string>, categories: Record<string, Record<string, string>> }> {
+export async function getFunctionsByCategory(): Promise<{ popular: Record<string, string>, categories: Record<string, Record<string, string>> }> {
   const now = Date.now();
   
   // Use cached data if it's still valid
@@ -109,7 +106,7 @@ function organizeFunctionsByCategory(funcList: any): { popular: Record<string, s
 }
 
 // Create context menu items
-async function createContextMenus(): Promise<void> {
+export async function createContextMenus(): Promise<void> {
   try {
     // Get functions from API
     const { popular, categories } = await getFunctionsByCategory();
@@ -179,7 +176,7 @@ async function createContextMenus(): Promise<void> {
 }
 
 // Handle context menu clicks
-async function handleContextMenuClick(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab): Promise<void> {
+export async function handleContextMenuClick(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab): Promise<void> {
   if (!tab?.id) return;
 
   const menuId = info.menuItemId as string;
@@ -209,58 +206,3 @@ async function handleContextMenuClick(info: chrome.contextMenus.OnClickData, tab
     }
   }
 }
-
-// Initialize context menus when extension loads
-// Use chrome.runtime.onStartup and chrome.runtime.onInstalled for proper initialization
-chrome.runtime.onStartup.addListener(() => {
-  createContextMenus().catch(error => {
-    console.error('[Gofakeit] Error initializing context menus:', error);
-  });
-});
-
-chrome.runtime.onInstalled.addListener(() => {
-  createContextMenus().catch(error => {
-    console.error('[Gofakeit] Error initializing context menus:', error);
-  });
-});
-
-// Check if content script is already injected
-export async function isContentScriptInjected(tabId: number): Promise<boolean> {
-  try {
-    await chrome.tabs.sendMessage(tabId, { command: 'ping' });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Inject content script if not already injected
-export async function injectContentScriptIfNeeded(tabId: number): Promise<void> {
-  const isInjected = await isContentScriptInjected(tabId);
-  if (!isInjected) {
-    await chrome.scripting.executeScript({
-      target: { tabId },
-      files: ['content.js']
-    });
-  }
-}
-
-// Runs when the user clicks the extension icon
-chrome.action.onClicked.addListener(async (tab) => {
-  if (tab.id) {
-    await injectContentScriptIfNeeded(tab.id);
-  }
-});
-
-chrome.commands.onCommand.addListener(async (command) => {
-  if (command === 'trigger-autofill') {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    const tab = tabs[0];
-    if (tab?.id) {
-      await injectContentScriptIfNeeded(tab.id);
-    }
-  }
-});
-
-// Handle context menu clicks
-chrome.contextMenus.onClicked.addListener(handleContextMenuClick);

@@ -1,7 +1,11 @@
-import { SelectionState } from './types';
-import { GOFAKEIT_COLORS, GOFAKEIT_BORDER, GOFAKEIT_ZINDEX } from './styles';
 import { showNotification, dismissAllPersistentNotifications } from './notifications';
 import { autofillElement, autofillContainer } from './autofill';
+
+// Selection state interface
+interface SelectionState {
+  isActive: boolean;
+  highlightedElement: HTMLElement | null;
+}
 
 // Global state for selection mode
 let selectionState: SelectionState = {
@@ -16,14 +20,7 @@ function ensureHighlightOverlay(): HTMLElement {
   if (!highlightOverlay) {
     highlightOverlay = document.createElement('div');
     highlightOverlay.id = 'gofakeit-highlight-overlay';
-    highlightOverlay.style.position = 'fixed';
-    highlightOverlay.style.pointerEvents = 'none';
-    highlightOverlay.style.border = `${GOFAKEIT_BORDER.width}px solid ${GOFAKEIT_COLORS.primary}`;
-    highlightOverlay.style.borderRadius = `${GOFAKEIT_BORDER.radius}px`;
-    highlightOverlay.style.zIndex = GOFAKEIT_ZINDEX.badge.toString();
-    highlightOverlay.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.08)';
-    highlightOverlay.style.background = 'transparent';
-    highlightOverlay.style.display = 'none';
+    highlightOverlay.className = 'highlight-overlay';
     document.body.appendChild(highlightOverlay);
   }
   return highlightOverlay;
@@ -32,7 +29,7 @@ function ensureHighlightOverlay(): HTMLElement {
 function positionOverlayForElement(element: HTMLElement): void {
   const overlay = ensureHighlightOverlay();
   const rect = element.getBoundingClientRect();
-  overlay.style.display = 'block';
+  overlay.classList.add('visible');
   overlay.style.top = `${Math.max(0, rect.top)}px`;
   overlay.style.left = `${Math.max(0, rect.left)}px`;
   overlay.style.width = `${Math.max(0, rect.width)}px`;
@@ -41,7 +38,7 @@ function positionOverlayForElement(element: HTMLElement): void {
 
 function hideOverlay(): void {
   if (highlightOverlay) {
-    highlightOverlay.style.display = 'none';
+    highlightOverlay.classList.remove('visible');
   }
 }
 
@@ -185,9 +182,13 @@ let smartFillEnabledForSelection = true;
 
 function readSmartFillSetting(): void {
   try {
-    chrome.storage.sync.get({ gofakeitSmartFill: true }, (items) => {
-      smartFillEnabledForSelection = !!items.gofakeitSmartFill;
-    });
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.sync.get({ gofakeitSmartFill: true }, (items) => {
+        smartFillEnabledForSelection = !!items.gofakeitSmartFill;
+      });
+    } else {
+      smartFillEnabledForSelection = true;
+    }
   } catch {
     smartFillEnabledForSelection = true;
   }
