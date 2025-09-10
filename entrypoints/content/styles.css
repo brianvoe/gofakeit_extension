@@ -1,0 +1,132 @@
+/* Gofakeit Extension Content Script Styles */
+@import url('/variables.css');
+
+/* Notification Container */
+.notifications {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1000000;
+  width: 300px;
+  gap: 8px;
+  font-family: var(--gfi-font-family);
+
+  /* Base Notification */
+  .notification {
+    position: relative;
+    padding: 12px 24px;
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: var(--gfi-font-family);
+    font-size: var(--gfi-font-size);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateX(100%);
+    word-wrap: break-word;
+
+    /* Notification Types */
+    &.success {
+      background-color: var(--gfi-success);
+    }
+
+    &.error {
+      background-color: var(--gfi-error);
+    }
+
+    &.info {
+      background-color: var(--gfi-info);
+    }
+
+    &.persistent {
+      background-color: var(--gfi-info);
+      border: 2px solid var(--gfi-primary);
+    }
+
+    /* Notification States */
+    &.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    &.exiting {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+
+    /* Dismiss Button */
+    .dismiss-btn {
+      display: flex;
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 18px;
+      cursor: pointer;
+      opacity: 0.7;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s ease;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+
+    /* Selection Indicator */
+    .selection-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      font-size: 12px;
+
+      .cursor-icon {
+        font-size: 16px;
+        animation: pulse 2s infinite;
+
+        @keyframes pulse {
+          0%, 100% { 
+            transform: scale(1); 
+          }
+          50% { 
+            transform: scale(2); 
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Highlight Overlay */
+.highlight-overlay {
+  position: fixed;
+  pointer-events: none;
+  border: 2px solid var(--gfi-primary);
+  border-radius: 6px;
+  z-index: 2147483647;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+  background: transparent;
+  display: none;
+
+  &.visible {
+    display: block;
+  }
+}
+
+/* Error Highlighting */
+.error-highlight {
+  border: 2px solid var(--gfi-error) !important;
+  transition: border 0.3s ease;
+}

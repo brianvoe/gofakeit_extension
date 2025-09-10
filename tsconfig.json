@@ -1,14 +1,3 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["DOM", "ESNext"],
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "types": ["chrome", "node"]
-  },
-  "include": ["src"]
+  "extends": "./.wxt/tsconfig.json"
 }

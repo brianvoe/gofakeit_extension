@@ -20,16 +20,7 @@ function ensureHighlightOverlay(): HTMLElement {
   if (!highlightOverlay) {
     highlightOverlay = document.createElement('div');
     highlightOverlay.id = 'gofakeit-highlight-overlay';
-    highlightOverlay.style.cssText = `
-      position: fixed;
-      pointer-events: none;
-      border: 2px solid #ffa000;
-      border-radius: 6px;
-      z-index: 2147483647;
-      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
-      background: transparent;
-      display: none;
-    `;
+    highlightOverlay.className = 'highlight-overlay';
     document.body.appendChild(highlightOverlay);
   }
   return highlightOverlay;
@@ -38,7 +29,7 @@ function ensureHighlightOverlay(): HTMLElement {
 function positionOverlayForElement(element: HTMLElement): void {
   const overlay = ensureHighlightOverlay();
   const rect = element.getBoundingClientRect();
-  overlay.style.display = 'block';
+  overlay.classList.add('visible');
   overlay.style.top = `${Math.max(0, rect.top)}px`;
   overlay.style.left = `${Math.max(0, rect.left)}px`;
   overlay.style.width = `${Math.max(0, rect.width)}px`;
@@ -47,7 +38,7 @@ function positionOverlayForElement(element: HTMLElement): void {
 
 function hideOverlay(): void {
   if (highlightOverlay) {
-    highlightOverlay.style.display = 'none';
+    highlightOverlay.classList.remove('visible');
   }
 }
 
@@ -191,9 +182,13 @@ let smartFillEnabledForSelection = true;
 
 function readSmartFillSetting(): void {
   try {
-    chrome.storage.sync.get({ gofakeitSmartFill: true }, (items) => {
-      smartFillEnabledForSelection = !!items.gofakeitSmartFill;
-    });
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.sync.get({ gofakeitSmartFill: true }, (items) => {
+        smartFillEnabledForSelection = !!items.gofakeitSmartFill;
+      });
+    } else {
+      smartFillEnabledForSelection = true;
+    }
   } catch {
     smartFillEnabledForSelection = true;
   }
