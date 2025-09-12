@@ -3,6 +3,9 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   outDir: "dist",
   publicDir: 'public',
+  webExt: {
+    disabled: true,
+  },
   manifest: {
     name: 'Gofakeit',
     version: '1.0',
