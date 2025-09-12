@@ -8,177 +8,188 @@ interface QueuedNotification {
   timestamp: number;
   persistent?: boolean;
   dismissCallback?: () => void;
+  duration?: number;
 }
 
-// Global notification container
-let notificationContainer: HTMLElement | null = null;
-let activeNotifications: HTMLElement[] = [];
-let notificationQueue: QueuedNotification[] = [];
-let isProcessingQueue = false;
+// Notification class for managing notifications
+export class Notification {
+  private notificationContainer: HTMLElement | null = null;
+  private activeNotifications: HTMLElement[] = [];
+  private notificationQueue: QueuedNotification[] = [];
+  private isProcessingQueue = false;
+  private defaultDuration = 500; // Default duration in milliseconds
 
-// Initialize the notification container
-function initNotificationContainer(): void {
-  if (!notificationContainer) {
-    notificationContainer = document.createElement("div");
-    notificationContainer.id = "gofakeit-notifications";
-    notificationContainer.className = "notifications";
-    document.body.appendChild(notificationContainer);
-  }
-}
+  // Main method to show notifications
+  public show(
+    type: NotificationType,
+    message: string,
+    dismissCallback?: () => void,
+    duration?: number
+  ): void {
+    // Add notification to queue
+    const queuedNotification: QueuedNotification = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      message,
+      type,
+      timestamp: Date.now(),
+      persistent: type === "persistent",
+      dismissCallback,
+      duration,
+    };
 
-// Remove a notification from the list and reposition others
-function removeNotification(notification: HTMLElement): void {
-  const index = activeNotifications.indexOf(notification);
-  if (index > -1) {
-    activeNotifications.splice(index, 1);
-  }
+    this.notificationQueue.push(queuedNotification);
 
-  if (notification.parentNode) {
-    notification.parentNode.removeChild(notification);
-  }
-
-  // Process next notification in queue
-  processNextNotification();
-}
-
-// Create a dismiss button for persistent notifications
-function createDismissButton(
-  notification: HTMLElement,
-  dismissCallback?: () => void
-): HTMLElement {
-  const dismissBtn = document.createElement("button");
-  dismissBtn.innerHTML = "&times;";
-  dismissBtn.className = "dismiss-btn";
-
-  dismissBtn.addEventListener("click", () => {
-    // Animate out
-    notification.classList.add("exiting");
-
-    setTimeout(() => {
-      removeNotification(notification);
-      if (dismissCallback) {
-        dismissCallback();
-      }
-    }, 300);
-  });
-
-  return dismissBtn;
-}
-
-// Create visual indicator for selection mode
-function createSelectionIndicator(): HTMLElement {
-  const indicator = document.createElement("div");
-  indicator.className = "selection-indicator";
-
-  // Create cursor icon
-  const cursorIcon = document.createElement("div");
-  cursorIcon.innerHTML = "👆";
-  cursorIcon.className = "cursor-icon";
-
-  const text = document.createElement("span");
-  text.textContent = "Hover over form fields or containers to highlight them";
-
-  indicator.appendChild(cursorIcon);
-  indicator.appendChild(text);
-
-  return indicator;
-}
-
-// Process the next notification in the queue
-async function processNextNotification(): Promise<void> {
-  if (isProcessingQueue || notificationQueue.length === 0) {
-    return;
-  }
-
-  isProcessingQueue = true;
-
-  // Get the next notification from the queue
-  const queuedNotification = notificationQueue.shift()!;
-
-  // Initialize container if needed
-  initNotificationContainer();
-
-  const notification = document.createElement("div");
-  notification.className = `notification ${queuedNotification.type}`;
-
-  notification.textContent = queuedNotification.message;
-
-  // Add dismiss button for persistent notifications
-  if (queuedNotification.type === "persistent") {
-    (notification as any).dataset.gofakeitPersistent = "true";
-    const dismissBtn = createDismissButton(
-      notification,
-      queuedNotification.dismissCallback
-    );
-    notification.appendChild(dismissBtn);
-
-    // Add selection indicator for selection mode
-    if (queuedNotification.message.includes("Click on a form field")) {
-      const indicator = createSelectionIndicator();
-      notification.appendChild(indicator);
+    // Process queue if not already processing
+    if (!this.isProcessingQueue) {
+      this.processNextNotification();
     }
   }
 
-  // Add to container and active list
-  notificationContainer!.appendChild(notification);
-  activeNotifications.push(notification);
-
-  // Animate in
-  requestAnimationFrame(() => {
-    notification.classList.add("visible");
-  });
-
-  // Only auto-remove non-persistent notifications after 5 seconds
-  if (queuedNotification.type !== "persistent") {
-        setTimeout(() => {
-          // Animate out
-    notification.classList.add("exiting");
-    
-    setTimeout(() => {
-      removeNotification(notification);
-    }, 300);
-    }, 500);
+  // Initialize the notification container
+  private initNotificationContainer(): void {
+    if (!this.notificationContainer) {
+      this.notificationContainer = document.createElement("div");
+      this.notificationContainer.id = "gofakeit-notifications";
+      this.notificationContainer.className = "notifications";
+      document.body.appendChild(this.notificationContainer);
+    }
   }
 
-  isProcessingQueue = false;
-}
+  // Remove a notification from the list and reposition others
+  private removeNotification(notification: HTMLElement): void {
+    const index = this.activeNotifications.indexOf(notification);
+    if (index > -1) {
+      this.activeNotifications.splice(index, 1);
+    }
 
-// Create a queued notification system
-export function showNotification(
-  message: string,
-  type: NotificationType = "info",
-  dismissCallback?: () => void
-): void {
-  // Add notification to queue
-  const queuedNotification: QueuedNotification = {
-    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-    message,
-    type,
-    timestamp: Date.now(),
-    persistent: type === "persistent",
-    dismissCallback,
-  };
+    if (this.notificationContainer && notification.parentNode) {
+      this.notificationContainer.removeChild(notification);
+    }
 
-  notificationQueue.push(queuedNotification);
-
-  // Process queue if not already processing
-  if (!isProcessingQueue) {
-    processNextNotification();
+    // Reposition remaining notifications
+    this.activeNotifications.forEach((notif, i) => {
+      notif.style.transform = `translateY(${i * 60}px)`;
+    });
   }
-}
 
-// Function to dismiss all persistent notifications
-export function dismissAllPersistentNotifications(): void {
-  activeNotifications.forEach((notification) => {
-    if (
-      (notification as any).dataset &&
-      (notification as any).dataset.gofakeitPersistent === "true"
-    ) {
+  // Create a dismiss button for the notification
+  private createDismissButton(
+    notification: HTMLElement,
+    dismissCallback?: () => void
+  ): HTMLButtonElement {
+    const dismissBtn = document.createElement("button");
+    dismissBtn.innerHTML = "&times;";
+    dismissBtn.className = "dismiss-btn";
+
+    dismissBtn.addEventListener("click", () => {
+      // Animate out
       notification.classList.add("exiting");
 
       setTimeout(() => {
-        removeNotification(notification);
+        this.removeNotification(notification);
+        if (dismissCallback) {
+          dismissCallback();
+        }
       }, 300);
+    });
+
+    return dismissBtn;
+  }
+
+  // Create visual indicator for selection mode
+  private createSelectionIndicator(): HTMLElement {
+    const indicator = document.createElement("div");
+    indicator.className = "selection-indicator";
+
+    // Create cursor icon
+    const cursorIcon = document.createElement("div");
+    cursorIcon.innerHTML = "👆";
+    cursorIcon.className = "cursor-icon";
+
+    const text = document.createElement("span");
+    text.textContent = "Hover over form fields or containers to highlight them";
+
+    indicator.appendChild(cursorIcon);
+    indicator.appendChild(text);
+
+    return indicator;
+  }
+
+  // Process the next notification in the queue
+  private async processNextNotification(): Promise<void> {
+    if (this.isProcessingQueue || this.notificationQueue.length === 0) {
+      return;
     }
-  });
+
+    this.isProcessingQueue = true;
+
+    // Get the next notification from the queue
+    const queuedNotification = this.notificationQueue.shift()!;
+
+    // Initialize container if needed
+    this.initNotificationContainer();
+
+    // Create notification element
+    const notification = document.createElement("div");
+    notification.className = `notification ${queuedNotification.type}`;
+    notification.dataset.gofakeitPersistent = queuedNotification.persistent ? "true" : "false";
+
+    // Create message element
+    const message = document.createElement("div");
+    message.className = "notification-message";
+    message.textContent = queuedNotification.message;
+
+    // Add message to notification
+    notification.appendChild(message);
+
+    // Add dismiss button for non-persistent notifications
+    if (queuedNotification.type !== "persistent") {
+      const dismissBtn = this.createDismissButton(notification, queuedNotification.dismissCallback);
+      notification.appendChild(dismissBtn);
+    }
+
+    // Add to container and active list
+    this.notificationContainer!.appendChild(notification);
+    this.activeNotifications.push(notification);
+
+    // Position the notification
+    const index = this.activeNotifications.length - 1;
+    notification.style.transform = `translateY(${index * 60}px)`;
+
+    // Animate in
+    requestAnimationFrame(() => {
+      notification.classList.add("visible");
+    });
+
+    // Only auto-remove non-persistent notifications
+    if (queuedNotification.type !== "persistent") {
+      const duration = queuedNotification.duration || this.defaultDuration;
+      setTimeout(() => {
+        // Animate out
+        notification.classList.add("exiting");
+        
+        setTimeout(() => {
+          this.removeNotification(notification);
+        }, 300);
+      }, duration);
+    }
+
+    this.isProcessingQueue = false;
+  }
+
+
+  // Function to dismiss all persistent notifications
+  public dismissAllPersistentNotifications(): void {
+    this.activeNotifications.forEach((notification) => {
+      if (
+        (notification as any).dataset &&
+        (notification as any).dataset.gofakeitPersistent === "true"
+      ) {
+        notification.classList.add("exiting");
+        setTimeout(() => {
+          this.removeNotification(notification);
+        }, 300);
+      }
+    });
+  }
 }

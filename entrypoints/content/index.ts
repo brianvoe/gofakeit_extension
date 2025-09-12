@@ -1,18 +1,42 @@
-import { autofillAll, autofillElement } from './autofill';
-import { enableSelectionMode } from './selection';
-import { showNotification } from './notifications';
-
+import { Autofill } from 'gofakeit';
+import { selection } from './selection';
+import { Notification } from './notifications';
 import './styles.css';
+
+// Initialize single notification instance and export it
+export const notification = new Notification();
+
+// Initialize gofakeit autofill instance with storage values
+let autofillInstance: Autofill;
+
+ // Message interface for communication between popup and content script
+ interface GofakeitMessage {
+  command: 'autofill-all' | 'autofill-selected' | 'ping' | 'context-menu';
+  function?: string;
+}
+
+async function initializeAutofill() {
+  const [mode, stagger, badges] = await Promise.all([
+    storage.getItem<string>('sync:gofakeitMode') ?? 'auto',
+    storage.getItem<number>('sync:gofakeitStagger') ?? 50,
+    storage.getItem<number>('sync:gofakeitBadges') ?? 3000
+  ]);
+  
+  autofillInstance = new Autofill({
+    mode: mode as 'auto' | 'manual',
+    stagger: stagger ?? 50,
+    badges: badges ?? 3000,
+    debug: false
+  });
+}
+
 
 export default defineContentScript({
   matches: ['<all_urls>'],
   main() {
-    // Message interface for communication between popup and content script
-    interface GofakeitMessage {
-      command: 'autofill-all' | 'autofill-selected' | 'ping' | 'context-menu';
-      function?: string;
-    }
-
+    // Initialize autofill instance
+    initializeAutofill();
+   
     // Handle context menu function application
     async function handleContextMenuFunction(funcName: string): Promise<void> {
       try {
@@ -34,23 +58,18 @@ export default defineContentScript({
         }
         
         if (!targetElement || !isFormElement(targetElement)) {
-          showNotification('Please right-click on a form field to apply the function', 'error');
+          notification.show('error', 'Please right-click on a form field to apply the function');
           return;
         }
         
         // Set the data-gofakeit attribute and apply the function
         targetElement.setAttribute('data-gofakeit', funcName);
-        const success = await autofillElement(targetElement);
         
-        if (success) {
-          showNotification(`Applied ${funcName} function successfully`, 'success');
-        } else {
-          showNotification(`Failed to apply ${funcName} function`, 'error');
-        }
+        await autofillInstance.fill(targetElement);
+        notification.show('success', `Applied ${funcName} function successfully`);
         
       } catch (error) {
-        console.error('[Gofakeit] Error applying context menu function:', error);
-        showNotification(`Error applying ${funcName} function`, 'error');
+        notification.show('error', `Error applying ${funcName} function: ${error}`);
       }
     }
 
@@ -89,11 +108,13 @@ export default defineContentScript({
         // Respond to ping to confirm content script is injected
         _sendResponse({ status: 'ok' });
       } else if (msg.command === 'autofill-all') {
-        autofillAll().catch(error => {
-          console.error('[Gofakeit] Error during autofill:', error);
-        });
+        await autofillInstance.fill();
+        notification.show('success', 'Autofill completed successfully!');
       } else if (msg.command === 'autofill-selected') {
-        enableSelectionMode();
+        selection.enableSelectionMode(async (element: HTMLElement) => {
+          await autofillInstance.fill(element);
+          notification.show('success', 'Autofill completed successfully!');
+        });
       } else if (msg.command === 'context-menu') {
         if (msg.function) {
           await handleContextMenuFunction(msg.function);
