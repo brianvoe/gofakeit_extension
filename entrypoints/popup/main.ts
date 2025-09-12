@@ -1,5 +1,7 @@
 import { PasswordGenerator } from './password-generator';
 import { UuidGenerator } from './uuid-generator';
+import { AutofillOptions } from './autofill-options';
+import './styles.css';
 
 // Check if content script is already injected
 async function isContentScriptInjected(tabId: number): Promise<boolean> {
@@ -46,23 +48,33 @@ const sendCommand = async (command: string) => {
 // Set the correct SVG URL for the logo
 const logoImg = document.querySelector('.header img') as HTMLImageElement;
 if (logoImg) {
-  logoImg.src = chrome.runtime.getURL('assets/images/full.svg');
+  logoImg.src = chrome.runtime.getURL('images/full.svg');
 }
 
 document.getElementById('autofill-all')?.addEventListener('click', () => sendCommand('autofill-all'));
 document.getElementById('autofill-selected')?.addEventListener('click', () => sendCommand('autofill-selected'));
 
-// Settings: Smart-fill toggle persistence with chrome.storage
+// Settings: Auto-fill toggle persistence with WXT storage
 const fallbackToggle = document.getElementById('toggle-fallback') as HTMLInputElement | null;
 if (fallbackToggle) {
-  chrome.storage.sync.get({ gofakeitSmartFill: true }, (items) => {
-    fallbackToggle!.checked = !!items.gofakeitSmartFill;
-  });
+  // Load initial state
+  storage.getItem<string>('sync:gofakeitMode').then((mode) => {
+    fallbackToggle!.checked = mode === 'auto';
+  }).catch(console.error);
 
-  fallbackToggle.addEventListener('change', () => {
-    chrome.storage.sync.set({ gofakeitSmartFill: fallbackToggle!.checked });
+  // Save changes
+  fallbackToggle.addEventListener('change', async () => {
+    try {
+      const modeValue = fallbackToggle!.checked ? 'auto' : 'manual';
+      await storage.setItem('sync:gofakeitMode', modeValue);
+    } catch (error) {
+      console.error('Failed to save autofill mode:', error);
+    }
   });
 }
+
+// Initialize autofill options modal
+new AutofillOptions();
 
 // Initialize password generator
 new PasswordGenerator();

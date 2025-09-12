@@ -4,13 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gofakeit</title>
-    <link rel="stylesheet" href="variables.css" />
-    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <img src="assets/images/full.svg" alt="Gofakeit Logo" />
+        <img src="./images/full.svg" alt="Gofakeit Logo" />
       </div>
 
       <div class="section">
@@ -23,17 +21,73 @@
       </div>
 
       <div class="section">
-        <h2 class="section-header">Autofill</h2>
-        <label class="toggle" for="toggle-fallback">
-          <input type="checkbox" id="toggle-fallback" />
-          <span class="toggle-track">
-            <span class="toggle-thumb"></span>
-          </span>
-          <span class="toggle-label">Smart-fill</span>
-        </label>
+        <h2 class="header">Autofill</h2>
+        <div class="autofill-controls">
+          <label class="toggle" for="toggle-fallback">
+            <span class="toggle-label">Mode</span>
+            <input type="checkbox" id="toggle-fallback" />
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+              <span class="toggle-text toggle-text-auto">Auto</span>
+              <span class="toggle-text toggle-text-manual">Manual</span>
+            </span>
+          </label>
+          <div id="autofill-options" class="btn-options" title="More Options">
+            Options
+          </div>
+        </div>
         <div class="actions">
           <button id="autofill-all" class="btn primary">All</button>
           <button id="autofill-selected" class="btn secondary">Selected</button>
+        </div>
+      </div>
+
+      <!-- Autofill Options Modal -->
+      <div id="autofill-options-modal" class="modal-overlay">
+        <div class="modal-content" style="width: 400px;">
+          <div class="modal-header">
+            <h2>Options</h2>
+            <button id="autofill-options-close" class="modal-close">&times;</button>
+          </div>
+          <div class="autofill-options">
+            <div class="option-group">
+              <label class="option-label">
+                <span class="option-title">Mode</span>
+                <span class="option-description">Auto: All inputs<br />Manual: inputs with data-gofakeit</span>
+              </label>
+              <label class="toggle" for="modal-toggle-mode">
+                <input type="checkbox" id="modal-toggle-mode" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                  <span class="toggle-text toggle-text-auto">Auto</span>
+                  <span class="toggle-text toggle-text-manual">Manual</span>
+                </span>
+              </label>
+            </div>
+
+            <div class="option-group">
+              <label class="option-label">
+                <span class="option-title">Stagger</span>
+                <span class="option-description">Delay filling each field</span>
+              </label>
+              <div class="range-control">
+                <input type="range" id="modal-range-stagger" class="range" min="0" max="200" step="10" value="50" />
+                <span class="range-value" id="stagger-value">50ms</span>
+              </div>
+            </div>
+
+            <div class="option-group">
+              <label class="option-label">
+                <span class="option-title">Badges</span>
+                <span class="option-description">Badges show time</span>
+              </label>
+              <div class="range-control">
+                <input type="range" id="modal-range-badges" class="range" min="0" max="5000" step="100" value="3000" />
+                <span class="range-value" id="badges-value">3.0s</span>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
 
@@ -68,34 +122,47 @@
                 <input
                   type="range"
                   id="password-length"
-                  min="1"
-                  max="100"
+                  class="range"
+                  min="5"
+                  max="50"
                   value="12"
                 />
                 <span id="length-value">12</span>
               </div>
               <div class="option-group">
-                <label>
+                <label class="toggle small">
                   <input type="checkbox" id="include-uppercase" checked />
-                  Uppercase (A-Z)
+                  <div class="toggle-track">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                  Uppercase
                 </label>
-                <label>
+                <label class="toggle small">
                   <input type="checkbox" id="include-lowercase" checked />
-                  Lowercase (a-z)
+                  <div class="toggle-track">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                  Lowercase
                 </label>
-                <label>
+                <label class="toggle small">
                   <input type="checkbox" id="include-numbers" checked />
-                  Numbers (0-9)
+                  <div class="toggle-track">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                  Numbers
                 </label>
-                <label>
+                <label class="toggle small">
                   <input type="checkbox" id="include-symbols" checked />
-                  Symbols (!@#$%^&*)
+                  <div class="toggle-track">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                  Symbols
                 </label>
               </div>
             </div>
             <div class="actions">
-              <button id="generate-password" class="btn primary">
-                Generate Password
+              <button id="generate-password" class="btn primary full">
+                Generate
               </button>
             </div>
           </div>
@@ -104,7 +171,7 @@
 
       <!-- UUID Generator Modal -->
       <div id="uuid-modal" class="modal-overlay">
-        <div class="modal-content">
+        <div class="modal-content" style="width: 500px;">
           <div class="modal-header">
             <h2>UUID Generator</h2>
             <button id="close-uuid-modal" class="modal-close">&times;</button>
@@ -125,18 +192,9 @@
                 Copy
               </button>
             </div>
-            <div class="password-options">
-              <div class="option-group">
-                <label for="uuid-version">Version:</label>
-                <select id="uuid-version">
-                  <option value="1">Version 1 (Time-based)</option>
-                  <option value="4" selected>Version 4 (Random)</option>
-                </select>
-              </div>
-            </div>
             <div class="actions">
-              <button id="generate-uuid" class="btn primary">
-                Generate UUID
+              <button id="generate-uuid" class="btn primary full">
+                Generate
               </button>
             </div>
           </div>
@@ -149,6 +207,8 @@
         </div>
       </div>
     </div>
+
+    
 
     <script type="module" src="main.ts"></script>
   </body>

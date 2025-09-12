@@ -1,21 +1,25 @@
+import { fetchFunc } from 'gofakeit';
+
 // UUID Generator functionality
 export class UuidGenerator {
   private modal: HTMLElement;
   private uuidOutput: HTMLInputElement;
-  private versionSelect: HTMLSelectElement;
   private generateBtn: HTMLButtonElement;
   private copyBtn: HTMLButtonElement;
   private openBtn: HTMLButtonElement;
   private closeBtn: HTMLButtonElement;
+  private debounceTimer: number | null = null;
+  private scrambleInterval: number | null = null;
+  private targetUuid: string = '';
+  private currentUuid: string = '';
+  private characterPositions: number[] = [];
+  private animationStartTime: number = 0;
 
   constructor() {
     this.modal = document.getElementById("uuid-modal") as HTMLElement;
     this.uuidOutput = document.getElementById(
       "uuid-output"
     ) as HTMLInputElement;
-    this.versionSelect = document.getElementById(
-      "uuid-version"
-    ) as HTMLSelectElement;
     this.generateBtn = document.getElementById(
       "generate-uuid"
     ) as HTMLButtonElement;
@@ -56,11 +60,13 @@ export class UuidGenerator {
 
     // Generate UUID button
     this.generateBtn.addEventListener("click", async () => {
-      this.generateBtn.disabled = true;
-      this.generateBtn.textContent = "Generating...";
+      this.generateBtn.style.backgroundColor = 'var(--gfi-secondary)';
+      
       await this.generateUuid();
-      this.generateBtn.disabled = false;
-      this.generateBtn.textContent = "Generate UUID";
+      
+      setTimeout(() => {
+        this.generateBtn.style.backgroundColor = '';
+      }, 500);
     });
 
     // Copy UUID button
@@ -73,6 +79,8 @@ export class UuidGenerator {
     this.modal.classList.add("active");
     // Focus the first input for better accessibility
     this.uuidOutput.focus();
+    // Generate UUID immediately when modal opens
+    this.generateUuid();
   }
 
   private closeModal(): void {
@@ -81,24 +89,22 @@ export class UuidGenerator {
 
   private async generateUuid(): Promise<void> {
     try {
-      // Build query parameters based on user selection
-      const params = new URLSearchParams();
-      params.append("version", this.versionSelect.value);
+      // Start scramble animation
+      this.startScrambleAnimation();
+      
+      // Use gofakeit plugin's fetchFunc - uuid function takes no parameters
+      const result = await fetchFunc('uuid');
 
-      // Fetch UUID from Gofakeit API
-      const response = await fetch(
-        `https://api.gofakeit.com/funcs/uuid?${params.toString()}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (result.success && result.data) {
+        // Stop animation and reveal final UUID
+        this.revealUuid(result.data);
+      } else {
+        this.stopScrambleAnimation();
+        throw new Error(result.error || 'Failed to generate UUID');
       }
-
-      const uuid = await response.text();
-      this.uuidOutput.value = uuid;
-      this.uuidOutput.style.color = "";
     } catch (error) {
       console.error("[Gofakeit] Error generating UUID:", error);
+      this.stopScrambleAnimation();
       this.uuidOutput.value = "Error generating UUID";
       this.uuidOutput.style.color = 'var(--gofakeit-error)';
     }
@@ -114,25 +120,139 @@ export class UuidGenerator {
 
     try {
       await navigator.clipboard.writeText(this.uuidOutput.value);
-
-      // Visual feedback
+      
+      // Clear text feedback
       const originalText = this.copyBtn.textContent;
-      this.copyBtn.textContent = "Copied!";
-      this.copyBtn.style.backgroundColor = 'var(--gofakeit-success)';
-
+      this.copyBtn.textContent = 'Copied!';
+      
       setTimeout(() => {
         this.copyBtn.textContent = originalText;
-        this.copyBtn.style.backgroundColor = "";
-      }, 200);
+      }, 1200);
     } catch (error) {
       console.error("Failed to copy UUID:", error);
-      this.copyBtn.textContent = "Failed";
-      this.copyBtn.style.backgroundColor = 'var(--gofakeit-error)';
-
-      setTimeout(() => {
-        this.copyBtn.textContent = "Copy";
-        this.copyBtn.style.backgroundColor = "";
-      }, 200);
     }
+  }
+
+  private startScrambleAnimation(): void {
+    const characters = '0123456789abcdef-';
+    
+    // Clear any existing animation
+    this.stopScrambleAnimation();
+    
+    // Record animation start time
+    this.animationStartTime = Date.now();
+    
+    // Initialize with random characters (UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+    this.currentUuid = '';
+    this.characterPositions = [];
+    
+    for (let i = 0; i < 36; i++) {
+      if (i === 8 || i === 13 || i === 18 || i === 23) {
+        this.currentUuid += '-';
+        this.characterPositions.push(16); // Index for '-'
+      } else {
+        const randomChar = characters[Math.floor(Math.random() * 16)]; // 0-9, a-f
+        this.currentUuid += randomChar;
+        this.characterPositions.push(characters.indexOf(randomChar));
+      }
+    }
+    
+    this.uuidOutput.value = this.currentUuid;
+    this.uuidOutput.style.color = 'var(--gfi-info)';
+    
+    // Add smooth transition for progressive glow
+    this.uuidOutput.style.transition = 'box-shadow 0.1s ease-out';
+    
+    // Start the flip animation
+    this.scrambleInterval = window.setInterval(() => {
+      let hasChanges = false;
+      let newUuid = '';
+      
+      for (let i = 0; i < 36; i++) {
+        if (i === 8 || i === 13 || i === 18 || i === 23) {
+          newUuid += '-';
+        } else {
+          // If we don't have a target yet, just keep flipping randomly
+          if (!this.targetUuid) {
+            this.characterPositions[i] = (this.characterPositions[i] + 1) % 16;
+            newUuid += characters[this.characterPositions[i]];
+            hasChanges = true;
+          } else {
+            // If we have a target, flip towards it
+            const targetChar = this.targetUuid[i];
+            const targetIndex = characters.indexOf(targetChar);
+            const currentIndex = this.characterPositions[i];
+            
+            if (currentIndex !== targetIndex) {
+              // Move towards target character
+              if (currentIndex < targetIndex) {
+                this.characterPositions[i] = (currentIndex + 1) % 16;
+              } else {
+                this.characterPositions[i] = (currentIndex - 1 + 16) % 16;
+              }
+              newUuid += characters[this.characterPositions[i]];
+              hasChanges = true;
+            } else {
+              newUuid += characters[currentIndex];
+            }
+          }
+        }
+      }
+      
+      this.currentUuid = newUuid;
+      this.uuidOutput.value = this.currentUuid;
+      
+      // Progressive glow during animation
+      this.updateProgressiveGlow();
+      
+      // If no changes and we have a target, we're done
+      if (!hasChanges && this.targetUuid) {
+        this.stopScrambleAnimation();
+        this.revealUuidImmediately(this.targetUuid);
+      }
+    }, 60); // Match password generator speed
+  }
+
+  private updateProgressiveGlow(): void {
+    const elapsed = Date.now() - this.animationStartTime;
+    const progress = Math.min(elapsed / 1000, 1); // 1 second to reach full glow
+    
+    // Calculate glow intensity based on progress
+    const glowIntensity = progress * 0.6; // Max 0.6 opacity
+    const glowSize = 5 + (progress * 10); // 5px to 15px blur
+    
+    this.uuidOutput.style.boxShadow = `0 0 ${glowSize}px rgba(255, 160, 0, ${glowIntensity})`;
+  }
+
+  private stopScrambleAnimation(): void {
+    if (this.scrambleInterval) {
+      clearInterval(this.scrambleInterval);
+      this.scrambleInterval = null;
+    }
+  }
+
+  private revealUuid(finalUuid: string): void {
+    // Set the target UUID - the animation will automatically flip to it
+    this.targetUuid = finalUuid;
+  }
+
+  private revealUuidImmediately(finalUuid: string): void {
+    // This is called when the animation completes - immediate success glow!
+    this.uuidOutput.style.color = '';
+    
+    // BIG SUCCESS GLOW! 🎉 - happens immediately when last character completes
+    this.uuidOutput.style.transition = 'box-shadow 0.3s ease-out';
+    this.uuidOutput.style.boxShadow = '0 0 25px rgba(255, 160, 0, 0.8), 0 0 50px rgba(255, 160, 0, 0.4)';
+    
+    // Hold the big glow for a moment, then fade away
+    setTimeout(() => {
+      this.uuidOutput.style.transition = 'box-shadow 1.5s ease-in-out';
+      this.uuidOutput.style.boxShadow = '0 0 0px rgba(255, 160, 0, 0)';
+      
+      // Remove transition after animation completes
+      setTimeout(() => {
+        this.uuidOutput.style.transition = '';
+      }, 1500);
+    }, 800); // Hold the success glow for 800ms
   }
 }
