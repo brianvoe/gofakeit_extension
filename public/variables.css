@@ -1,4 +1,3 @@
-/* Gofakeit Extension CSS Variables */
 :root {
   /* ===== Base Colors ===== */
   --gfi-primary: #ffa000;
@@ -21,7 +20,7 @@
 
   /* ===== Font ===== */
   --gfi-font-size: 14px;
-  --gfi-font-family: "Helvetica, Arial, sans-serif";
+  --gfi-font-family: 'Helvetica', sans-serif;
 
   /* ===== Sizes ===== */
   --gfi-input-height: 35px;
@@ -34,4 +33,7 @@
 
   /* ===== Popup Button Colors ===== */
   --gfi-btn-color: #333333;
+
+  /* ===== Timing ===== */
+  --gfi-timing-medium: 0.3s;
 }
