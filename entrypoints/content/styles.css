@@ -2,7 +2,7 @@
 @import url('/variables.css');
 
 /* Notification Container */
-.notifications {
+.gfi-notifications {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -15,7 +15,7 @@
   font-family: var(--gfi-font-family);
 
   /* Base Notification */
-  .notification {
+  .gfi-notification {
     position: relative;
     padding: 12px 24px;
     border-radius: 6px;
@@ -29,36 +29,47 @@
     word-wrap: break-word;
 
     /* Notification Types */
-    &.success {
+    &.gfi-success {
       background-color: var(--gfi-success);
     }
 
-    &.error {
+    &.gfi-error {
       background-color: var(--gfi-error);
     }
 
-    &.info {
+    &.gfi-warning {
+      background-color: var(--gfi-warning);
+      color: #333333; /* Dark text for better contrast on yellow background */
+    }
+
+    &.gfi-info {
       background-color: var(--gfi-info);
     }
 
-    &.persistent {
+    &.gfi-persistent {
       background-color: var(--gfi-info);
       border: 2px solid var(--gfi-primary);
     }
 
     /* Notification States */
-    &.visible {
+    &.gfi-visible {
       opacity: 1;
       transform: translateX(0);
     }
 
-    &.exiting {
+    &.gfi-exiting {
       opacity: 0;
       transform: translateX(100%);
     }
 
+    /* Notification Message */
+    .gfi-notification-message {
+      flex: 1;
+      padding-right: 30px; /* Space for dismiss button */
+    }
+
     /* Dismiss Button */
-    .dismiss-btn {
+    .gfi-dismiss-btn {
       display: flex;
       position: absolute;
       top: 8px;
@@ -82,7 +93,7 @@
     }
 
     /* Selection Indicator */
-    .selection-indicator {
+    .gfi-selection-indicator {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -92,7 +103,7 @@
       border-radius: 4px;
       font-size: 12px;
 
-      .cursor-icon {
+      .gfi-cursor-icon {
         font-size: 16px;
         animation: pulse 2s infinite;
 
@@ -110,23 +121,31 @@
 }
 
 /* Highlight Overlay */
-.highlight-overlay {
+.gfi-highlight-overlay {
   position: fixed;
   pointer-events: none;
-  border: 2px solid var(--gfi-primary);
-  border-radius: 6px;
-  z-index: 2147483647;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
-  background: transparent;
-  display: none;
+  border: 3px solid var(--gfi-primary);
+  border-radius: 4px;
+  z-index: 999999;
+  background: rgba(255, 160, 0, 0.1);
+  transition: all 0.2s ease;
+  opacity: 0;
+  transform: scale(0.95);
 
-  &.visible {
-    display: block;
+  &.gfi-visible {
+    opacity: 1;
+    transform: scale(1);
   }
-}
 
-/* Error Highlighting */
-.error-highlight {
-  border: 2px solid var(--gfi-error) !important;
-  transition: border 0.3s ease;
+  /* Found form inputs - primary color */
+  &.gfi-found {
+    border-color: var(--gfi-primary);
+    background: rgba(255, 160, 0, 0.1);
+  }
+
+  /* No form inputs found - error color */
+  &.gfi-not-found {
+    border-color: var(--gfi-error);
+    background: rgba(255, 56, 96, 0.1);
+  }
 }
