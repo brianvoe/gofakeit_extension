@@ -1,5 +1,5 @@
 // Notification type definitions
-type NotificationType = 'success' | 'error' | 'info' | 'persistent';
+type NotificationType = 'success' | 'error' | 'info' | 'warning' | 'persistent';
 
 interface QueuedNotification {
   id: string;
@@ -17,7 +17,7 @@ export class Notification {
   private activeNotifications: HTMLElement[] = [];
   private notificationQueue: QueuedNotification[] = [];
   private isProcessingQueue = false;
-  private defaultDuration = 500; // Default duration in milliseconds
+  private defaultDuration = 3000; // Default duration in milliseconds
 
   // Main method to show notifications
   public show(
@@ -50,7 +50,7 @@ export class Notification {
     if (!this.notificationContainer) {
       this.notificationContainer = document.createElement("div");
       this.notificationContainer.id = "gofakeit-notifications";
-      this.notificationContainer.className = "notifications";
+      this.notificationContainer.className = "gfi-notifications";
       document.body.appendChild(this.notificationContainer);
     }
   }
@@ -79,11 +79,11 @@ export class Notification {
   ): HTMLButtonElement {
     const dismissBtn = document.createElement("button");
     dismissBtn.innerHTML = "&times;";
-    dismissBtn.className = "dismiss-btn";
+    dismissBtn.className = "gfi-dismiss-btn";
 
     dismissBtn.addEventListener("click", () => {
       // Animate out
-      notification.classList.add("exiting");
+      notification.classList.add("gfi-exiting");
 
       setTimeout(() => {
         this.removeNotification(notification);
@@ -99,12 +99,12 @@ export class Notification {
   // Create visual indicator for selection mode
   private createSelectionIndicator(): HTMLElement {
     const indicator = document.createElement("div");
-    indicator.className = "selection-indicator";
+    indicator.className = "gfi-selection-indicator";
 
     // Create cursor icon
     const cursorIcon = document.createElement("div");
     cursorIcon.innerHTML = "👆";
-    cursorIcon.className = "cursor-icon";
+    cursorIcon.className = "gfi-cursor-icon";
 
     const text = document.createElement("span");
     text.textContent = "Hover over form fields or containers to highlight them";
@@ -131,13 +131,19 @@ export class Notification {
 
     // Create notification element
     const notification = document.createElement("div");
-    notification.className = `notification ${queuedNotification.type}`;
+    notification.className = `gfi-notification gfi-${queuedNotification.type}`;
     notification.dataset.gofakeitPersistent = queuedNotification.persistent ? "true" : "false";
 
     // Create message element
     const message = document.createElement("div");
-    message.className = "notification-message";
-    message.textContent = queuedNotification.message;
+    message.className = "gfi-notification-message";
+    
+    // Check if message contains HTML tags
+    if (queuedNotification.message.includes('<')) {
+      message.innerHTML = queuedNotification.message;
+    } else {
+      message.textContent = queuedNotification.message;
+    }
 
     // Add message to notification
     notification.appendChild(message);
@@ -158,7 +164,7 @@ export class Notification {
 
     // Animate in
     requestAnimationFrame(() => {
-      notification.classList.add("visible");
+      notification.classList.add("gfi-visible");
     });
 
     // Only auto-remove non-persistent notifications
@@ -166,7 +172,7 @@ export class Notification {
       const duration = queuedNotification.duration || this.defaultDuration;
       setTimeout(() => {
         // Animate out
-        notification.classList.add("exiting");
+        notification.classList.add("gfi-exiting");
         
         setTimeout(() => {
           this.removeNotification(notification);
@@ -185,7 +191,7 @@ export class Notification {
         (notification as any).dataset &&
         (notification as any).dataset.gofakeitPersistent === "true"
       ) {
-        notification.classList.add("exiting");
+        notification.classList.add("gfi-exiting");
         setTimeout(() => {
           this.removeNotification(notification);
         }, 300);

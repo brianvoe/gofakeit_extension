@@ -1,4 +1,12 @@
-import { notification } from './index';
+interface Notification {
+  show(type: string, message: string, dismissCallback?: () => void): void;
+  dismissAllPersistentNotifications(): void;
+}
+
+interface SelectionSettings {
+  mode: 'auto' | 'manual';
+  notification: Notification;
+}
 
 // Selection state interface
 interface SelectionState {
@@ -15,27 +23,34 @@ export class Selection {
   
   private selectionCallback: ((element: HTMLElement) => void) | null = null;
   private highlightOverlay: HTMLElement | null = null;
-  private selectionMode: 'auto' | 'manual' = 'auto';
+  private mode: 'auto' | 'manual' = 'auto';
+  private notification: Notification;
 
-  constructor() {
-    this.readAutoFillSetting();
-  }
-
-  // Auto detection helpers
-  private async readAutoFillSetting(): Promise<void> {
-    const mode = await storage.getItem<string>('sync:gofakeitMode');
-    this.selectionMode = (mode === 'auto' || mode === 'manual') ? mode : 'auto';
+  constructor(settings: SelectionSettings) {
+    this.mode = settings.mode;
+    this.notification = settings.notification;
   }
 
   // Enable selection mode for clicking on form containers and fields
-  public enableSelectionMode(callback: (element: HTMLElement) => void): void {
+  public async enableSelectionMode(callback: (element: HTMLElement) => void): Promise<void> {
     if (this.selectionState.isActive) {
       return; // Already active
     }
     
     this.selectionState.isActive = true;
     this.selectionCallback = callback;
-    notification.show('persistent', 'Click on a form field or container to autofill', () => {
+    this.notification.show('persistent', `
+      <div style="text-align: center; margin-bottom: 8px;">
+        <strong>🎯 Selection Mode Active</strong>
+      </div>
+      <div style="font-size: 12px; line-height: 1.4;">
+        Click on any element to autofill<br>
+        <div style="margin-top: 6px;">
+          <span style="color: #ffa000;">🟠 Orange</span> = Has form fields<br>
+          <span style="color: #ff3860;">🔴 Red</span> = No form fields
+        </div>
+      </div>
+    `, () => {
       // Dismiss callback - exit selection mode when notification is dismissed
       this.disableSelectionMode();
     });
@@ -68,80 +83,70 @@ export class Selection {
     this.highlightOverlay = null;
     
     // Dismiss all persistent notifications
-    notification.dismissAllPersistentNotifications();
+    this.notification.dismissAllPersistentNotifications();
   }
 
   // Overlay for high-visibility highlighting that won't be affected by host CSS
   private ensureHighlightOverlay(): HTMLElement {
     if (!this.highlightOverlay) {
       this.highlightOverlay = document.createElement('div');
-      this.highlightOverlay.className = 'highlight-overlay';
-      this.highlightOverlay.style.cssText = `
-        position: absolute;
-        pointer-events: none;
-        z-index: 999999;
-        border: 3px solid #4CAF50;
-        background: rgba(76, 175, 80, 0.1);
-        border-radius: 4px;
-        transition: all 0.2s ease;
-        opacity: 0;
-        transform: scale(0.95);
-      `;
+      this.highlightOverlay.className = 'gfi-highlight-overlay';
       document.body.appendChild(this.highlightOverlay);
     }
     return this.highlightOverlay;
   }
 
-  // Position overlay for a specific element
-  private positionOverlayForElement(element: HTMLElement): void {
+  // Position overlay for a specific element with color indication
+  private positionOverlayForElement(element: HTMLElement, hasFormInputs: boolean): void {
     const overlay = this.ensureHighlightOverlay();
     const rect = element.getBoundingClientRect();
     const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
     const scrollY = window.pageYOffset || document.documentElement.scrollTop;
     
+    // Position the overlay
     overlay.style.left = (rect.left + scrollX - 3) + 'px';
     overlay.style.top = (rect.top + scrollY - 3) + 'px';
-    overlay.style.width = (rect.width + 6) + 'px';
-    overlay.style.height = (rect.height + 6) + 'px';
+    overlay.style.width = (rect.width + 3) + 'px';
+    overlay.style.height = (rect.height + 3) + 'px';
+    
+    // Remove existing color classes
+    overlay.classList.remove('gfi-found', 'gfi-not-found');
+    
+    // Add appropriate color class based on whether element has form inputs
+    if (hasFormInputs) {
+      overlay.classList.add('gfi-found');
+    } else {
+      overlay.classList.add('gfi-not-found');
+    }
     
     // Show overlay with animation
     requestAnimationFrame(() => {
-      overlay.classList.add('visible');
-      overlay.style.opacity = '1';
-      overlay.style.transform = 'scale(1)';
+      overlay.classList.add('gfi-visible');
     });
   }
 
   // Hide the highlight overlay
   private hideOverlay(): void {
     if (this.highlightOverlay) {
-      this.highlightOverlay.classList.remove('visible');
-      this.highlightOverlay.style.opacity = '0';
-      this.highlightOverlay.style.transform = 'scale(0.95)';
+      this.highlightOverlay.classList.remove('gfi-visible');
     }
   }
 
-  // Handle mouse over events to highlight potential containers and fields
+  // Handle mouse over events to highlight all elements
   private handleMouseOver(event: MouseEvent): void {
     if (!this.selectionState.isActive) return;
     
     const target = event.target as HTMLElement;
     if (!target) return;
     
-    // Check if it's a candidate field or container
-    if (this.isCandidateField(target)) {
-      this.selectionState.highlightedElement = target;
-      this.positionOverlayForElement(target);
-    } else {
-      const container = this.findFormContainerSmart(target);
-      if (container) {
-        this.selectionState.highlightedElement = container;
-        this.positionOverlayForElement(container);
-      } else {
-        this.hideOverlay();
-        this.selectionState.highlightedElement = null;
-      }
-    }
+    // Always highlight the element under the mouse
+    this.selectionState.highlightedElement = target;
+    
+    // Check if this element or its children have form inputs
+    const hasFormInputs = this.elementHasFormInputs(target);
+    
+    // Show overlay with appropriate color
+    this.positionOverlayForElement(target, hasFormInputs);
   }
 
   // Handle mouse out events
@@ -156,7 +161,7 @@ export class Selection {
   }
 
   // Handle click events to trigger autofill
-  private async handleClick(event: MouseEvent): Promise<void> {
+  private handleClick(event: MouseEvent): void {
     if (!this.selectionState.isActive) return;
     
     event.preventDefault();
@@ -165,8 +170,8 @@ export class Selection {
     const target = event.target as HTMLElement;
     if (!target) return;
     
-    // Check if clicked on a form field
-    if (this.isCandidateField(target)) {
+    // Check if the clicked element itself has form fields (don't walk up DOM tree)
+    if (this.elementHasFormInputs(target)) {
       if (this.selectionCallback) {
         this.selectionCallback(target);
       }
@@ -174,14 +179,9 @@ export class Selection {
       return;
     }
     
-    // Check if clicked on a container
-    const container = this.findFormContainerSmart(target);
-    if (container) {
-      if (this.selectionCallback) {
-        this.selectionCallback(container);
-      }
-      this.disableSelectionMode();
-    }
+    // If no form fields found in the clicked element, show notification and exit selection mode without autofilling
+    this.notification.show('info', 'ℹ️ No fillable form fields found in selected area');
+    this.disableSelectionMode();
   }
 
   // Handle key events (escape to exit selection mode)
@@ -193,90 +193,61 @@ export class Selection {
     }
   }
 
-  // Check if an element is a candidate field for autofill
-  private isCandidateField(element: HTMLElement): boolean {
+  // Check if an element or its children contain form inputs
+  private elementHasFormInputs(element: HTMLElement): boolean {
+    // Check if the element itself is a form field
     const tag = element.tagName;
     const isForm = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-    if (!isForm) return false;
-    
-    if (element instanceof HTMLInputElement) {
-      if (element.type === 'hidden' || element.disabled || element.readOnly) return false;
-    }
-    if (element instanceof HTMLSelectElement) {
-      if (element.disabled) return false;
-    }
-    
-    // In manual mode, only select fields with data-gofakeit attribute
-    if (this.selectionMode === 'manual') {
-      return element.hasAttribute('data-gofakeit');
-    }
-    
-    // In auto mode, select any valid form field
-    return true;
-  }
-
-  // Find the closest container that has form fields with data-gofakeit attributes
-  private findFormContainer(element: HTMLElement): HTMLElement | null {
-    // Check if the current element has form fields
-    if (this.hasFormFields(element)) {
-      return element;
-    }
-    
-    // Check parent elements
-    let parent = element.parentElement;
-    while (parent) {
-      if (this.hasFormFields(parent)) {
-        return parent;
+    if (isForm) {
+      // Check if it's a valid form field
+      if (element instanceof HTMLInputElement) {
+        if (element.type === 'hidden' || element.disabled || element.readOnly) return false;
       }
-      parent = parent.parentElement;
-    }
-    
-    return null;
-  }
-
-  // Check if an element contains form fields with data-gofakeit attributes
-  private hasFormFields(element: HTMLElement): boolean {
-    const formFields = element.querySelectorAll('input[data-gofakeit], textarea[data-gofakeit], select[data-gofakeit]');
-    return formFields.length > 0;
-  }
-
-  // Smart container detection that considers both data-gofakeit fields and auto-detection
-  private findFormContainerSmart(element: HTMLElement): HTMLElement | null {
-    // First try to find a container with data-gofakeit fields
-    let current = element;
-    while (current && current !== document.body) {
-      if (this.hasFormFields(current)) {
-        return current;
+      if (element instanceof HTMLSelectElement) {
+        if (element.disabled) return false;
       }
-      current = current.parentElement as HTMLElement;
+      
+      // In manual mode, only consider fields with data-gofakeit attribute
+      if (this.mode === 'manual') {
+        return element.hasAttribute('data-gofakeit');
+      }
+      
+      // In auto mode, any valid form field counts
+      return true;
     }
     
-    // If in auto mode, look for any container with form fields
-    if (this.selectionMode === 'auto') {
-      current = element;
-      while (current && current !== document.body) {
-        const formFields = current.querySelectorAll('input, textarea, select');
-        if (formFields.length > 0) {
-          return current;
+    // Check if any child elements are form fields
+    const formFields = element.querySelectorAll('input, textarea, select');
+    for (const field of formFields) {
+      const fieldTag = field.tagName;
+      if (fieldTag === 'INPUT' || fieldTag === 'TEXTAREA' || fieldTag === 'SELECT') {
+        // Check if it's a valid form field
+        if (field instanceof HTMLInputElement) {
+          if (field.type === 'hidden' || field.disabled || field.readOnly) continue;
         }
-        current = current.parentElement as HTMLElement;
+        if (field instanceof HTMLSelectElement) {
+          if (field.disabled) continue;
+        }
+        
+        // In manual mode, only consider fields with data-gofakeit attribute
+        if (this.mode === 'manual') {
+          if (field.hasAttribute('data-gofakeit')) {
+            return true;
+          }
+        } else {
+          // In auto mode, any valid form field counts
+          return true;
+        }
       }
     }
     
-    return null;
+    return false;
   }
 
   // Handle repositioning when window is resized or scrolled
   public handleReposition(): void {
     if (!this.selectionState.isActive || !this.selectionState.highlightedElement) return;
-    this.positionOverlayForElement(this.selectionState.highlightedElement);
+    const hasFormInputs = this.elementHasFormInputs(this.selectionState.highlightedElement);
+    this.positionOverlayForElement(this.selectionState.highlightedElement, hasFormInputs);
   }
-}
-
-// Create and export a singleton instance
-export const selection = new Selection();
-
-// Legacy function for backward compatibility
-export function enableSelectionMode(callback: (element: HTMLElement) => void): void {
-  selection.enableSelectionMode(callback);
 }
