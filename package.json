@@ -16,7 +16,7 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "gofakeit": "^2.1.2"
+    "gofakeit": "^2.2.0"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.6",
