@@ -1,4 +1,5 @@
 import { browser } from 'wxt/browser';
+import { storage } from 'wxt/utils/storage';
 import { PasswordGenerator } from './password-generator';
 import { UuidGenerator } from './uuid-generator';
 import { AutofillOptions } from './autofill-options';
@@ -32,14 +33,14 @@ const sendCommand = async (command: string) => {
     if (tab?.id) {
       // First, ensure the content script is injected
       await injectContentScriptIfNeeded(tab.id);
-      
-      // Then send the message
-      await browser.tabs.sendMessage(tab.id, { command });
-      
+
       // Close the popup for interactive commands
       if (command === 'autofill-all' || command === 'autofill-selected') {
         window.close();
       }
+      
+      // Then send the message
+      await browser.tabs.sendMessage(tab.id, { command });
     }
   } catch (error) {
     console.error('Error sending command:', error);
