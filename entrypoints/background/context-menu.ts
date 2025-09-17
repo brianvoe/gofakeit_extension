@@ -1,3 +1,5 @@
+import { browser } from 'wxt/browser';
+
 // Cache for the function list to avoid repeated API calls
 let functionListCache: any = null;
 let functionListCacheTime: number = 0;
@@ -6,8 +8,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 // Fetch the complete list of available functions from the API
 async function fetchFunctionList(): Promise<any> {
   try {
-    const response = await fetch('https://api.gofakeit.com/funcs/list');
-    
+    const response = await fetch('https://api.gofakeit.com/funcs/list/short');
     if (!response.ok) {
       return {
         success: false,
@@ -55,21 +56,21 @@ export async function getFunctionsByCategory(): Promise<{ popular: Record<string
 }
 
 // Organize functions by category with popular functions
-function organizeFunctionsByCategory(funcList: any): { popular: Record<string, string>, categories: Record<string, Record<string, string>> } {
+function organizeFunctionsByCategory(funcList: Array<{value: string, display: string, category: string}>): { popular: Record<string, string>, categories: Record<string, Record<string, string>> } {
   const categories: Record<string, Record<string, string>> = {};
   
   // Define popular functions that should appear first
   const popularFunctions = ['email', 'firstname', 'lastname', 'password', 'gamertag'];
   
-  Object.entries(funcList).forEach(([funcName, funcInfo]: [string, any]) => {
-    const category = funcInfo.category || 'Other';
-    const displayName = funcInfo.display || funcName;
+  funcList.forEach(func => {
+    const category = func.category || 'Other';
+    const displayName = func.display || func.value;
     
     if (!categories[category]) {
       categories[category] = {};
     }
     
-    categories[category][funcName] = displayName;
+    categories[category][func.value] = displayName;
   });
   
   // Sort functions alphabetically within each category
@@ -94,8 +95,9 @@ function organizeFunctionsByCategory(funcList: any): { popular: Record<string, s
   // Create popular functions object
   const popular: Record<string, string> = {};
   popularFunctions.forEach(funcName => {
-    if (funcList[funcName]) {
-      popular[funcName] = funcList[funcName].display || funcName;
+    const func = funcList.find(f => f.value === funcName);
+    if (func) {
+      popular[funcName] = func.display || funcName;
     }
   });
 
@@ -112,16 +114,16 @@ export async function createContextMenus(): Promise<void> {
     const { popular, categories } = await getFunctionsByCategory();
     
     // Remove existing context menus
-    chrome.contextMenus.removeAll(() => {
+    browser.contextMenus.removeAll(() => {
       // Create parent menu
-      chrome.contextMenus.create({
+      browser.contextMenus.create({
         id: 'gofakeit-menu',
         title: 'Gofakeit',
         contexts: ['editable']
       });
 
       // Create "Popular Functions" header
-      chrome.contextMenus.create({
+      browser.contextMenus.create({
         id: 'gofakeit-popular-header',
         title: 'Popular Functions',
         parentId: 'gofakeit-menu',
@@ -131,7 +133,7 @@ export async function createContextMenus(): Promise<void> {
 
       // Create popular functions directly in the main menu
       Object.entries(popular).forEach(([funcName, displayName]) => {
-        chrome.contextMenus.create({
+        browser.contextMenus.create({
           id: `gofakeit-popular-${funcName}`,
           title: displayName,
           parentId: 'gofakeit-menu',
@@ -140,7 +142,7 @@ export async function createContextMenus(): Promise<void> {
       });
 
       // Create "Full List" submenu
-      chrome.contextMenus.create({
+      browser.contextMenus.create({
         id: 'gofakeit-full-list',
         title: 'Full List',
         parentId: 'gofakeit-menu',
@@ -152,7 +154,7 @@ export async function createContextMenus(): Promise<void> {
         // Skip empty categories
         if (Object.keys(functions).length === 0) return;
         
-        chrome.contextMenus.create({
+        browser.contextMenus.create({
           id: `gofakeit-${category.toLowerCase().replace(/\s+/g, '-')}`,
           title: category,
           parentId: 'gofakeit-full-list',
@@ -161,7 +163,7 @@ export async function createContextMenus(): Promise<void> {
 
         // Create function items under each category
         Object.entries(functions).forEach(([funcName, displayName]) => {
-          chrome.contextMenus.create({
+          browser.contextMenus.create({
             id: `gofakeit-func-${funcName}`,
             title: displayName,
             parentId: `gofakeit-${category.toLowerCase().replace(/\s+/g, '-')}`,
@@ -176,7 +178,7 @@ export async function createContextMenus(): Promise<void> {
 }
 
 // Handle context menu clicks
-export async function handleContextMenuClick(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab): Promise<void> {
+export async function handleContextMenuClick(info: any, tab?: any): Promise<void> {
   if (!tab?.id) return;
 
   const menuId = info.menuItemId as string;
@@ -186,17 +188,9 @@ export async function handleContextMenuClick(info: chrome.contextMenus.OnClickDa
     const funcName = menuId.replace('gofakeit-func-', '').replace('gofakeit-popular-', '');
     
     try {
-      // First, try to inject the content script if it's not already loaded
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content.js']
-      });
-      
-      // Wait a moment for the script to initialize
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       // Send message to content script to apply the function to the clicked element
-      await chrome.tabs.sendMessage(tab.id, {
+      // WXT automatically handles content script injection
+      await browser.tabs.sendMessage(tab.id, {
         command: 'context-menu',
         function: funcName
       });
