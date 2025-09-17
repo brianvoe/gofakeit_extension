@@ -7,23 +7,23 @@
   flex-direction: column;
   align-items: flex-end;
   position: fixed;
-  top: 24px;
-  right: 24px;
+  top: var(--gfi-spacing-base);
+  right: var(--gfi-spacing-base);
   z-index: 1000000;
   width: 300px;
-  gap: 8px;
+  gap: var(--gfi-spacing-half);
   font-family: var(--gfi-font-family);
 
   /* Base Notification */
   .gfi-notification {
     position: relative;
-    padding: 12px 24px;
-    border-radius: 6px;
+    padding: var(--gfi-spacing-half) var(--gfi-spacing-base);
+    border-radius: var(--gfi-border-radius);
     color: #ffffff;
     font-family: var(--gfi-font-family);
     font-size: var(--gfi-font-size);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
+    transition: all var(--gfi-timing-medium) ease;
     opacity: 0;
     transform: translateX(100%);
     word-wrap: break-word;
@@ -65,15 +65,14 @@
     /* Notification Message */
     .gfi-notification-message {
       flex: 1;
-      padding-right: 30px; /* Space for dismiss button */
     }
 
     /* Dismiss Button */
     .gfi-dismiss-btn {
       display: flex;
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: var(--gfi-spacing-quarter);
+      right: var(--gfi-spacing-quarter);
       background: transparent;
       border: none;
       color: #ffffff;
@@ -85,7 +84,7 @@
       height: 20px;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.2s ease;
+      transition: opacity var(--gfi-timing-medium) ease;
 
       &:hover {
         opacity: 1;
@@ -96,11 +95,11 @@
     .gfi-selection-indicator {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-top: 8px;
-      padding: 8px;
+      gap: var(--gfi-spacing-quarter);
+      margin-top: var(--gfi-spacing-quarter);
+      padding: var(--gfi-spacing-quarter);
       background: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
+      border-radius: var(--gfi-border-radius);
       font-size: 12px;
 
       .gfi-cursor-icon {
@@ -125,10 +124,10 @@
   position: fixed;
   pointer-events: none;
   border: 3px solid var(--gfi-primary);
-  border-radius: 4px;
+  border-radius: var(--gfi-border-radius);
   z-index: 999999;
   background: rgba(255, 160, 0, 0.1);
-  transition: all 0.2s ease;
+  transition: all var(--gfi-timing-medium) ease;
   opacity: 0;
   transform: scale(0.95);
 

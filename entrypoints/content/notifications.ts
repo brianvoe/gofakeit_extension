@@ -7,7 +7,6 @@ interface QueuedNotification {
   type: NotificationType;
   timestamp: number;
   persistent?: boolean;
-  dismissCallback?: () => void;
   duration?: number;
 }
 
@@ -17,13 +16,12 @@ export class Notification {
   private activeNotifications: HTMLElement[] = [];
   private notificationQueue: QueuedNotification[] = [];
   private isProcessingQueue = false;
-  private defaultDuration = 3000; // Default duration in milliseconds
+  private defaultDuration = 5000; // Default duration in milliseconds
 
   // Main method to show notifications
   public show(
     type: NotificationType,
     message: string,
-    dismissCallback?: () => void,
     duration?: number
   ): void {
     // Add notification to queue
@@ -33,7 +31,6 @@ export class Notification {
       type,
       timestamp: Date.now(),
       persistent: type === "persistent",
-      dismissCallback,
       duration,
     };
 
@@ -65,36 +62,8 @@ export class Notification {
     if (this.notificationContainer && notification.parentNode) {
       this.notificationContainer.removeChild(notification);
     }
-
-    // Reposition remaining notifications
-    this.activeNotifications.forEach((notif, i) => {
-      notif.style.transform = `translateY(${i * 60}px)`;
-    });
   }
 
-  // Create a dismiss button for the notification
-  private createDismissButton(
-    notification: HTMLElement,
-    dismissCallback?: () => void
-  ): HTMLButtonElement {
-    const dismissBtn = document.createElement("button");
-    dismissBtn.innerHTML = "&times;";
-    dismissBtn.className = "gfi-dismiss-btn";
-
-    dismissBtn.addEventListener("click", () => {
-      // Animate out
-      notification.classList.add("gfi-exiting");
-
-      setTimeout(() => {
-        this.removeNotification(notification);
-        if (dismissCallback) {
-          dismissCallback();
-        }
-      }, 300);
-    });
-
-    return dismissBtn;
-  }
 
   // Create visual indicator for selection mode
   private createSelectionIndicator(): HTMLElement {
@@ -148,19 +117,9 @@ export class Notification {
     // Add message to notification
     notification.appendChild(message);
 
-    // Add dismiss button for non-persistent notifications
-    if (queuedNotification.type !== "persistent") {
-      const dismissBtn = this.createDismissButton(notification, queuedNotification.dismissCallback);
-      notification.appendChild(dismissBtn);
-    }
-
     // Add to container and active list
     this.notificationContainer!.appendChild(notification);
     this.activeNotifications.push(notification);
-
-    // Position the notification
-    const index = this.activeNotifications.length - 1;
-    notification.style.transform = `translateY(${index * 60}px)`;
 
     // Animate in
     requestAnimationFrame(() => {

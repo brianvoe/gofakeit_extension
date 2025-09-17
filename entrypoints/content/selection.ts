@@ -1,5 +1,5 @@
 interface Notification {
-  show(type: string, message: string, dismissCallback?: () => void): void;
+  show(type: string, message: string): void;
   dismissAllPersistentNotifications(): void;
 }
 
@@ -50,10 +50,7 @@ export class Selection {
           <span style="color: #ff3860;">🔴 Red</span> = No form fields
         </div>
       </div>
-    `, () => {
-      // Dismiss callback - exit selection mode when notification is dismissed
-      this.disableSelectionMode();
-    });
+    `);
     
     // Add event listeners for mouse events
     document.addEventListener('mouseover', this.handleMouseOver.bind(this));
@@ -180,7 +177,7 @@ export class Selection {
     }
     
     // If no form fields found in the clicked element, show notification and exit selection mode without autofilling
-    this.notification.show('info', 'ℹ️ No fillable form fields found in selected area');
+    this.notification.show('error', 'No fillable form fields found in selected area');
     this.disableSelectionMode();
   }
 
