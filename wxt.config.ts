@@ -10,6 +10,11 @@ export default defineConfig({
     name: 'Gofakeit',
     version: '1.0',
     description: 'Generate fake data for testing and development',
+    browser_specific_settings: {
+      gecko: {
+        id: 'extension@gofakeit.com'
+      }
+    },
     icons: {
       16: 'images/icon16.png',
       48: 'images/icon48.png',
@@ -23,13 +28,5 @@ export default defineConfig({
         matches: ['<all_urls>'],
       },
     ],
-    commands: {
-      'trigger-autofill': {
-        suggested_key: {
-          default: 'Ctrl+Shift+F',
-        },
-        description: 'Trigger fake data generation on active tab',
-      },
-    },
   },
 });
