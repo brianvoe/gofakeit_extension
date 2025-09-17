@@ -400,12 +400,7 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
     transition: all var(--gfi-timing-fast) ease;
-
-    &:hover {
-      background: var(--gfi-border);
-    }
   }
 }
 

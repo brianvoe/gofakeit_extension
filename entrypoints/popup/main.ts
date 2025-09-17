@@ -1,3 +1,4 @@
+import { browser } from 'wxt/browser';
 import { PasswordGenerator } from './password-generator';
 import { UuidGenerator } from './uuid-generator';
 import { AutofillOptions } from './autofill-options';
@@ -6,7 +7,7 @@ import './styles.css';
 // Check if content script is already injected
 async function isContentScriptInjected(tabId: number): Promise<boolean> {
   try {
-    await chrome.tabs.sendMessage(tabId, { command: 'ping' });
+    await browser.tabs.sendMessage(tabId, { command: 'ping' });
     return true;
   } catch {
     return false;
@@ -17,7 +18,7 @@ async function isContentScriptInjected(tabId: number): Promise<boolean> {
 async function injectContentScriptIfNeeded(tabId: number): Promise<void> {
   const isInjected = await isContentScriptInjected(tabId);
   if (!isInjected) {
-    await chrome.scripting.executeScript({
+    await browser.scripting.executeScript({
       target: { tabId },
       files: ['content.js']
     });
@@ -26,14 +27,14 @@ async function injectContentScriptIfNeeded(tabId: number): Promise<void> {
 
 const sendCommand = async (command: string) => {
   try {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
     const tab = tabs[0];
     if (tab?.id) {
       // First, ensure the content script is injected
       await injectContentScriptIfNeeded(tab.id);
       
       // Then send the message
-      await chrome.tabs.sendMessage(tab.id, { command });
+      await browser.tabs.sendMessage(tab.id, { command });
       
       // Close the popup for interactive commands
       if (command === 'autofill-all' || command === 'autofill-selected') {
@@ -48,7 +49,7 @@ const sendCommand = async (command: string) => {
 // Set the correct SVG URL for the logo
 const logoImg = document.querySelector('.header img') as HTMLImageElement;
 if (logoImg) {
-  logoImg.src = chrome.runtime.getURL('images/full.svg');
+  logoImg.src = browser.runtime.getURL('/images/full.svg');
 }
 
 document.getElementById('autofill-all')?.addEventListener('click', () => sendCommand('autofill-all'));
