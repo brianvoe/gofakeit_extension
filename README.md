@@ -1,70 +1,94 @@
-# Gofakeit Chrome Extension
+# Gofakeit Extension
 
-A comprehensive Chrome extension that generates fake data for web forms using the [Gofakeit API](https://gofakeit.com/). This extension provides multiple ways to generate realistic fake data for testing and development purposes.
+A comprehensive browser extension that generates fake data for web forms using the [Gofakeit library](https://github.com/brianvoe/gofakeit). This extension provides multiple ways to generate realistic fake data for testing and development purposes, supporting both Chrome and Firefox browsers.
 
 ## 🚀 Features
 
 - **Smart Form Detection**: Automatically detects and fills form fields with appropriate fake data
 - **Multiple Input Types**: Supports text, email, phone, password, date/time, number, color, checkbox, radio, and select inputs
-- **Right-Click Context Menu**: Quick access to popular Gofakeit functions via right-click menu
+- **Right-Click Context Menu**: Quick access to 200+ Gofakeit functions via right-click menu
 - **Interactive Selection Mode**: Click to select specific areas for data generation
-- **Custom Functions**: Use any Gofakeit function with `data-gofakeit="function_name"`
+- **Popup Interface**: Bulk form filling with autofill options and settings
+- **Password Generator**: Built-in secure password generation
+- **UUID Generator**: Generate UUIDs for testing purposes
 - **Real-time Notifications**: Visual feedback for successful and failed operations
-- **Error Handling**: Graceful handling of API errors and invalid inputs
-- **Keyboard Shortcuts**: `Ctrl+Shift+F` to trigger data generation
+- **Cross-Browser Support**: Works on both Chrome (Manifest V3) and Firefox (Manifest V2)
+- **Settings Persistence**: Save autofill preferences across browser sessions
 
 ## 📦 Installation
 
 ### For Users
-1. Clone this repository
-2. Run `npm install` to install dependencies
-3. Run `npm run build` to build the extension
-4. Load the `dist` folder as an unpacked extension in Chrome
-5. Navigate to `chrome://extensions/`, enable "Developer mode", and click "Load unpacked"
+**Chrome Web Store**: [Install from Chrome Web Store](https://chrome.google.com/webstore) (coming soon)
+**Firefox Add-ons**: [Install from Firefox Add-ons](https://addons.mozilla.org) (coming soon)
 
 ### For Developers
 ```bash
 git clone https://github.com/brianvoe/gofakeit_extension.git
 cd gofakeit_extension
 npm install
-npm run dev  # For development with hot reload
+npm run dev        # For Chrome development with hot reload
+npm run dev:firefox # For Firefox development with hot reload
 ```
+
+### Manual Installation
+1. Clone this repository
+2. Run `npm install` to install dependencies
+3. Run `npm run build:chrome` for Chrome or `npm run build:firefox` for Firefox
+4. Load the appropriate `dist` folder as an unpacked extension:
+   - Chrome: `dist/chrome-mv3/`
+   - Firefox: `dist/firefox-mv2/`
 
 ## 🛠️ Development
 
 ### Scripts
-- `npm run dev` - Start development server with hot reload (watches for changes)
-- `npm run build` - Build for production
+- `npm run dev` - Start Chrome development server with hot reload
+- `npm run dev:firefox` - Start Firefox development server with hot reload
+- `npm run build` - Build for both Chrome and Firefox
+- `npm run build:chrome` - Build for Chrome only
+- `npm run build:firefox` - Build for Firefox only
+- `npm run zip` - Create zip files for both browsers
 - `npm run clean` - Remove the dist folder
+- `npm test` - Run test suite
 
 ### Project Structure
 ```
-src/
-├── index.ts                 # Main exports
-├── types.ts                 # TypeScript type definitions
-├── api.ts                   # Gofakeit API interactions
-├── autofill.ts              # Core data generation logic
-├── input-datetime.ts        # Date/time input handling
-├── input-text.ts            # Text input handling
-├── input-number.ts          # Number input handling
-├── input-misc.ts            # Checkbox, radio, and select handling
-├── context-menu.ts          # Right-click context menu
-├── selection.ts             # Interactive selection mode
-├── notifications.ts         # Toast notification system
-├── content.ts               # Main content script
-├── popup.ts                 # Popup script
-├── popup.html               # Popup HTML
-└── background.ts            # Background service worker
+entrypoints/
+├── background/
+│   ├── index.ts             # Background script entry point
+│   └── context-menu.ts      # Context menu creation and handling
+├── content/
+│   ├── index.ts             # Content script entry point
+│   ├── autofill-service.ts  # Autofill logic and gofakeit integration
+│   ├── message-handler.ts   # Message handling between popup and content
+│   ├── notifications.ts     # Toast notification system
+│   ├── selection.ts         # Interactive selection mode
+│   └── styles.css           # Content script styles
+└── popup/
+    ├── index.html           # Popup HTML
+    ├── main.ts              # Popup script
+    ├── autofill-options.ts  # Autofill settings modal
+    ├── password-generator.ts # Password generator functionality
+    ├── uuid-generator.ts    # UUID generator functionality
+    └── styles.css           # Popup styles
+
+public/
+├── images/                  # Extension icons and assets
+└── variables.css            # CSS variables for consistent styling
 ```
 
 ### Architecture
 
-#### Core Modules
-- **`autofill.ts`**: Main orchestration logic for data generation
-- **`api.ts`**: Handles all HTTP requests to the Gofakeit API
-- **`input-*.ts`**: Specialized handlers for different input types
-- **`context-menu.ts`**: Right-click menu functionality with popular functions
-- **`selection.ts`**: Interactive mode for selecting specific areas
+#### Core Services
+- **`AutofillService`**: Handles all autofill operations using the Gofakeit library
+- **`MessageHandler`**: Manages communication between popup and content scripts
+- **`Notification`**: Provides visual feedback for user actions
+- **`Selection`**: Interactive mode for selecting specific form areas
+
+#### Framework
+- **WXT**: Modern web extension framework for cross-browser compatibility
+- **TypeScript**: Full type safety and modern JavaScript features
+- **Vite**: Fast build tool with hot module replacement
+- **Gofakeit**: Comprehensive fake data generation library
 
 #### Input Type Support
 - **Text Inputs**: `text`, `email`, `tel`, `password`, `search`, `url`, `color`
@@ -74,57 +98,66 @@ src/
 
 ## 🎯 Usage
 
-### Basic Usage
-Add `data-gofakeit="true"` to any form field for automatic function mapping:
-```html
-<input type="email" data-gofakeit="true" placeholder="Email">
-<input type="text" data-gofakeit="name" placeholder="Name">
-```
-
-### Custom Functions
-Use any Gofakeit function by specifying the function name:
-```html
-<input type="text" data-gofakeit="company" placeholder="Company">
-<input type="text" data-gofakeit="creditcard" placeholder="Credit Card">
-```
+### Popup Interface
+1. Click the Gofakeit extension icon
+2. Choose "Autofill All" to fill all form fields on the page
+3. Choose "Autofill Selected" to enter selection mode
+4. Use the password generator and UUID generator tools
+5. Access autofill settings to customize behavior
 
 ### Right-Click Context Menu
 1. Right-click on any form field
 2. Select "Gofakeit" from the context menu
-3. Choose a category (Personal Information, Business, etc.)
-4. Select a specific function
+3. Choose from popular functions or browse the full list
+4. Select a specific function to apply to that field
 
-### Interactive Mode
-1. Click the extension icon
-2. Select "Selected" mode
-3. Click on form fields or containers to generate data
+### Interactive Selection Mode
+1. Click the extension icon and select "Autofill Selected"
+2. Click on form fields or containers to generate data
+3. The extension will detect the field type and apply appropriate data
 
-## 🔧 API Integration
+### Settings
+- **Auto Mode**: Automatically detects field types and applies appropriate data
+- **Manual Mode**: Requires explicit user selection for each field
+- **Stagger Timing**: Control the delay between filling multiple fields
+- **Badge Duration**: Set how long success/error badges are displayed
 
-The extension integrates with the [Gofakeit API](https://gofakeit.com/) to generate realistic fake data. All API calls are handled through the `api.ts` module with proper error handling and retry logic.
+## 🔧 Gofakeit Integration
+
+The extension uses the [Gofakeit library](https://github.com/brianvoe/gofakeit) to generate realistic fake data. The library provides 200+ functions for generating various types of test data.
 
 ### Popular Functions
-- **Personal**: `name`, `email`, `phone`, `address`, `city`, `state`, `zip`, `ssn`, `date`, `age`
+- **Personal**: `firstname`, `lastname`, `email`, `phone`, `address`, `city`, `state`, `zip`, `ssn`, `date`, `age`
 - **Business**: `company`, `job`, `department`, `url`, `username`
 - **Financial**: `creditcard`, `currency`, `account`, `routing`
 - **Technical**: `uuid`, `ipv4`, `ipv6`, `mac`, `password`
 - **Text**: `word`, `sentence`, `paragraph`, `lorem`
 - **Numbers**: `number`, `digit`, `price`
 - **Colors**: `hexcolor`, `rgb`
+- **Entertainment**: `moviename`, `gamertag`, `animal`, `color`
+
+### Context Menu Integration
+The extension fetches the complete list of available functions from the Gofakeit API to populate the right-click context menu, ensuring users always have access to the latest data generation capabilities.
 
 ## 🧪 Testing
 
 ### Manual Testing
-1. Build the extension: `npm run build`
-2. Load in Chrome as unpacked extension
+1. Build the extension: `npm run build:chrome` or `npm run build:firefox`
+2. Load in browser as unpacked extension
 3. Navigate to any form-heavy website
 4. Test various input types and functions
+5. Test both popup and right-click functionality
 
 ### Development Testing
-- Use `npm run dev` for continuous building during development (watches for changes)
+- Use `npm run dev` for Chrome or `npm run dev:firefox` for Firefox development
 - Use `npm run clean` to remove the dist folder if needed
 - Check browser console for detailed logging
-- Monitor network requests to Gofakeit API
+- Test cross-browser compatibility between Chrome and Firefox
+
+### Automated Testing
+- Run `npm test` to execute the test suite
+- Tests cover core functionality, error handling, and edge cases
+- Continuous integration ensures code quality
 
 ## 🤝 Contributing
 
@@ -137,10 +170,12 @@ The extension integrates with the [Gofakeit API](https://gofakeit.com/) to gener
 
 ### Development Guidelines
 - Follow TypeScript best practices
-- Add proper error handling
+- Use WXT framework conventions for cross-browser compatibility
+- Add proper error handling and user feedback
 - Include console logging for debugging
-- Test with multiple input types
+- Test with multiple input types and browsers
 - Update documentation for new features
+- Ensure all new features work in both Chrome and Firefox
 
 ## 📝 License
 
@@ -148,6 +183,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [Gofakeit](https://gofakeit.com/) for providing the fake data API
-- Chrome Extensions team for the excellent documentation
+- [Gofakeit](https://github.com/brianvoe/gofakeit) for providing the comprehensive fake data library
+- [WXT](https://wxt.dev/) for the excellent cross-browser extension framework
+- Chrome and Firefox extension teams for their documentation and support
 - The open source community for inspiration and tools
