@@ -8,7 +8,6 @@ export default defineConfig({
   },
   manifest: {
     name: 'Gofakeit',
-    version: '1.0',
     description: 'Generate fake data for testing and development',
     browser_specific_settings: {
       gecko: {
