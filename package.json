@@ -15,7 +15,8 @@
     "postinstall": "wxt prepare",
     "clean": "rm -rf .output dist",
     "test": "vitest --run",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "release": "node release.js"
   },
   "dependencies": {
     "gofakeit": "^2.3.0"
