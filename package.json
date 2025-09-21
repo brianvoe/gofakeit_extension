@@ -1,6 +1,6 @@
 {
   "name": "gofakeit-extension",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Browser extension to generate fake data using the Gofakeit API",
   "scripts": {
