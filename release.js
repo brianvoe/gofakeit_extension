@@ -130,6 +130,14 @@ async function main() {
   writePackageJson(packageJson);
   log('✅ Package.json updated!', 'green');
 
+  // Update package-lock.json to match the new version
+  log('Updating package-lock.json...', 'cyan');
+  if (!exec('npm install --package-lock-only')) {
+    log('❌ Failed to update package-lock.json. Aborting release.', 'red');
+    process.exit(1);
+  }
+  log('✅ Package-lock.json updated!', 'green');
+
   // Step 3: Clean previous builds
   log('\n🧹 Step 3: Cleaning previous builds...', 'yellow');
   if (!exec('npm run clean')) {
