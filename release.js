@@ -130,21 +130,6 @@ async function main() {
   writePackageJson(packageJson);
   log('✅ Package.json updated!', 'green');
 
-  // Update wxt.config.ts version
-  log('Updating wxt.config.ts...', 'cyan');
-  const wxtConfigPath = join(rootDir, 'wxt.config.ts');
-  let wxtConfig = readFileSync(wxtConfigPath, 'utf8');
-  
-  // Update the version in wxt.config.ts (remove patch version for extension)
-  const extensionVersion = newVersion.split('.').slice(0, 2).join('.');
-  wxtConfig = wxtConfig.replace(
-    /version:\s*['"][^'"]*['"]/,
-    `version: '${extensionVersion}'`
-  );
-  
-  writeFileSync(wxtConfigPath, wxtConfig);
-  log('✅ Wxt.config.ts updated!', 'green');
-
   // Step 3: Clean previous builds
   log('\n🧹 Step 3: Cleaning previous builds...', 'yellow');
   if (!exec('npm run clean')) {
