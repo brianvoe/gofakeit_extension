@@ -57,6 +57,8 @@ export class Selection {
     document.addEventListener('mouseout', this.handleMouseOut.bind(this));
     document.addEventListener('click', this.handleClick.bind(this));
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
+    document.addEventListener('scroll', this.handleScroll.bind(this), true);
+    window.addEventListener('resize', this.handleResize.bind(this));
   }
 
   // Disable selection mode and clean up
@@ -72,6 +74,8 @@ export class Selection {
     document.removeEventListener('mouseout', this.handleMouseOut.bind(this));
     document.removeEventListener('click', this.handleClick.bind(this));
     document.removeEventListener('keydown', this.handleKeyDown.bind(this));
+    document.removeEventListener('scroll', this.handleScroll.bind(this), true);
+    window.removeEventListener('resize', this.handleResize.bind(this));
     
     // Remove highlight overlay
     if (this.highlightOverlay && this.highlightOverlay.parentNode) {
@@ -96,30 +100,51 @@ export class Selection {
   // Position overlay for a specific element with color indication
   private positionOverlayForElement(element: HTMLElement, hasFormInputs: boolean): void {
     const overlay = this.ensureHighlightOverlay();
-    const rect = element.getBoundingClientRect();
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    
-    // Position the overlay
-    overlay.style.left = (rect.left + scrollX - 3) + 'px';
-    overlay.style.top = (rect.top + scrollY - 3) + 'px';
-    overlay.style.width = (rect.width + 3) + 'px';
-    overlay.style.height = (rect.height + 3) + 'px';
-    
-    // Remove existing color classes
-    overlay.classList.remove('gfi-found', 'gfi-not-found');
-    
-    // Add appropriate color class based on whether element has form inputs
-    if (hasFormInputs) {
-      overlay.classList.add('gfi-found');
-    } else {
+
+    const overlayRect = this.getBoundingBox(element); // no inflation when using outline
+
+    if (overlayRect.width <= 0 || overlayRect.height <= 0) {
+      overlay.classList.remove('gfi-found', 'gfi-visible');
       overlay.classList.add('gfi-not-found');
+      overlay.style.opacity = '0';
+      return;
     }
-    
-    // Show overlay with animation
+
+    const s = overlay.style;
+    s.position = 'fixed';
+    s.left = overlayRect.left + 'px';
+    s.top = overlayRect.top + 'px';
+    s.width = overlayRect.width + 'px';
+    s.height = overlayRect.height + 'px';
+
+    // mirror radius for perfect corners
+    s.borderRadius = getComputedStyle(element).borderRadius || '';
+
+    overlay.classList.remove('gfi-found', 'gfi-not-found');
+    overlay.classList.add(hasFormInputs ? 'gfi-found' : 'gfi-not-found');
+
     requestAnimationFrame(() => {
       overlay.classList.add('gfi-visible');
+      overlay.style.opacity = '1';
     });
+  }
+
+  // Viewport coords, no inflation; floor/ceil per-edge for crispness
+  private getBoundingBox(element: HTMLElement): { left: number; top: number; width: number; height: number } {
+    const r = element.getBoundingClientRect(); // border-box in viewport space
+
+    // snap each edge: floor left/top, ceil right/bottom
+    const left = Math.floor(r.left);
+    const top = Math.floor(r.top);
+    const right = Math.ceil(r.right);
+    const bottom = Math.ceil(r.bottom);
+
+    return {
+      left,
+      top,
+      width: right - left,
+      height: bottom - top,
+    };
   }
 
   // Hide the highlight overlay
@@ -239,6 +264,20 @@ export class Selection {
     }
     
     return false;
+  }
+
+  // Handle scroll events to update overlay position
+  private handleScroll(event: Event): void {
+    if (!this.selectionState.isActive || !this.selectionState.highlightedElement) return;
+    const hasFormInputs = this.elementHasFormInputs(this.selectionState.highlightedElement);
+    this.positionOverlayForElement(this.selectionState.highlightedElement, hasFormInputs);
+  }
+
+  // Handle resize events to update overlay position
+  private handleResize(event: Event): void {
+    if (!this.selectionState.isActive || !this.selectionState.highlightedElement) return;
+    const hasFormInputs = this.elementHasFormInputs(this.selectionState.highlightedElement);
+    this.positionOverlayForElement(this.selectionState.highlightedElement, hasFormInputs);
   }
 
   // Handle repositioning when window is resized or scrolled

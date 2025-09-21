@@ -4,7 +4,7 @@ import { Notification } from './notifications';
 
 // Message interface for communication between popup and content script
 interface GofakeitMessage {
-  command: 'autofill-all' | 'autofill-selected' | 'ping' | 'context-menu';
+  command: 'autofill-all' | 'autofill-selection' | 'ping' | 'context-menu';
   function?: string;
 }
 
@@ -49,7 +49,7 @@ export class MessageHandler {
           await this.autofillService.autofillAll();
           break;
         
-        case 'autofill-selected':
+        case 'autofill-selection':
           await this.handleAutofillSelected();
           break;
         

@@ -35,7 +35,7 @@ const sendCommand = async (command: string) => {
       await injectContentScriptIfNeeded(tab.id);
 
       // Close the popup for interactive commands
-      if (command === 'autofill-all' || command === 'autofill-selected') {
+      if (command === 'autofill-all' || command === 'autofill-selection') {
         window.close();
       }
       
@@ -54,7 +54,7 @@ if (logoImg) {
 }
 
 document.getElementById('autofill-all')?.addEventListener('click', () => sendCommand('autofill-all'));
-document.getElementById('autofill-selected')?.addEventListener('click', () => sendCommand('autofill-selected'));
+document.getElementById('autofill-selection')?.addEventListener('click', () => sendCommand('autofill-selection'));
 
 // Settings: Auto-fill toggle persistence with WXT storage
 const fallbackToggle = document.getElementById('toggle-fallback') as HTMLInputElement | null;

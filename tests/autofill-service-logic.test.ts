@@ -85,65 +85,100 @@ describe('AutofillService Logic', () => {
 
   describe('Result Handling Logic', () => {
     it('should show correct notification for no fields found', () => {
-      const showAutofillResults = (result: any, context: string = 'form fields') => {
-        if (result.success === 0 && result.failed === 0) {
+      const showAutofillResults = (elements: any[], context: string = 'form fields') => {
+        if (elements.length === 0) {
           return { type: 'error', message: `No fillable ${context} found` };
         }
         return null;
       };
 
-      const result = showAutofillResults({ success: 0, failed: 0 }, 'form field');
+      const result = showAutofillResults([], 'form field');
       
       expect(result?.type).toBe('error');
       expect(result?.message).toBe('No fillable form field found');
     });
 
     it('should show success notification for all fields filled', () => {
-      const showAutofillResults = (result: any, context: string = 'form fields') => {
-        if (result.success > 0 && result.failed === 0) {
-          return { 
-            type: 'success', 
-            message: `✅ Successfully filled ${result.success} ${context}${result.success === 1 ? '' : 's'}!` 
-          };
+      const showAutofillResults = (elements: any[], context: string = 'form fields') => {
+        if (elements.length === 0) {
+          return { type: 'error', message: `No fillable ${context} found` };
+        } else {
+          const successful = elements.filter(el => el.value && !el.error).length;
+          const failed = elements.filter(el => el.error).length;
+          
+          if (successful > 0 && failed === 0) {
+            return { 
+              type: 'success', 
+              message: `✅ Successfully filled ${successful} ${context}${successful === 1 ? '' : 's'}!` 
+            };
+          }
         }
         return null;
       };
 
-      const result = showAutofillResults({ success: 3, failed: 0 }, 'form field');
+      const elements = [
+        { value: 'test1', error: null },
+        { value: 'test2', error: null },
+        { value: 'test3', error: null }
+      ];
+      const result = showAutofillResults(elements, 'form field');
       
       expect(result?.type).toBe('success');
       expect(result?.message).toBe('✅ Successfully filled 3 form fields!');
     });
 
     it('should show warning notification for partial success', () => {
-      const showAutofillResults = (result: any, context: string = 'form fields') => {
-        if (result.success > 0 && result.failed > 0) {
-          return { 
-            type: 'warning', 
-            message: `⚠️ Filled ${result.success} ${context}${result.success === 1 ? '' : 's'}, ${result.failed} failed` 
-          };
+      const showAutofillResults = (elements: any[], context: string = 'form fields') => {
+        if (elements.length === 0) {
+          return { type: 'error', message: `No fillable ${context} found` };
+        } else {
+          const successful = elements.filter(el => el.value && !el.error).length;
+          const failed = elements.filter(el => el.error).length;
+          
+          if (successful > 0 && failed > 0) {
+            return { 
+              type: 'warning', 
+              message: `⚠️ Filled ${successful} ${context}${successful === 1 ? '' : 's'}, ${failed} failed` 
+            };
+          }
         }
         return null;
       };
 
-      const result = showAutofillResults({ success: 2, failed: 1 }, 'form field');
+      const elements = [
+        { value: 'test1', error: null },
+        { value: 'test2', error: null },
+        { value: null, error: 'Failed' }
+      ];
+      const result = showAutofillResults(elements, 'form field');
       
       expect(result?.type).toBe('warning');
       expect(result?.message).toBe('⚠️ Filled 2 form fields, 1 failed');
     });
 
     it('should show error notification for complete failure', () => {
-      const showAutofillResults = (result: any, context: string = 'form fields') => {
-        if (result.failed > 0 && result.success === 0) {
-          return { 
-            type: 'error', 
-            message: `❌ Failed to fill ${result.failed} ${context}${result.failed === 1 ? '' : 's'}` 
-          };
+      const showAutofillResults = (elements: any[], context: string = 'form fields') => {
+        if (elements.length === 0) {
+          return { type: 'error', message: `No fillable ${context} found` };
+        } else {
+          const successful = elements.filter(el => el.value && !el.error).length;
+          const failed = elements.filter(el => el.error).length;
+          
+          if (failed > 0 && successful === 0) {
+            return { 
+              type: 'error', 
+              message: `❌ Failed to fill ${failed} ${context}${failed === 1 ? '' : 's'}` 
+            };
+          }
         }
         return null;
       };
 
-      const result = showAutofillResults({ success: 0, failed: 2 }, 'form field');
+      const elements = [
+        { value: null, error: 'Failed 1' },
+        { value: null, error: 'Failed 2' }
+      ];
+      const result = showAutofillResults(elements, 'form field');
       
       expect(result?.type).toBe('error');
       expect(result?.message).toBe('❌ Failed to fill 2 form fields');
@@ -186,10 +221,17 @@ describe('AutofillService Logic', () => {
   });
 
   describe('Status Change Callback Logic', () => {
+    // Mock AutofillStatus enum values
+    const AutofillStatus = {
+      FOUND: 'FOUND',
+      COMPLETED: 'COMPLETED',
+      ERROR: 'ERROR'
+    };
+
     it('should handle found status with elements', () => {
       const handleStatusChange = (status: string, elements: any[]) => {
         switch (status) {
-          case 'found':
+          case AutofillStatus.FOUND:
             if (elements.length > 0) {
               return { type: 'info', message: `Found ${elements.length} fillable field${elements.length === 1 ? '' : 's'}` };
             } else {
@@ -200,7 +242,7 @@ describe('AutofillService Logic', () => {
         }
       };
 
-      const result = handleStatusChange('found', [{ id: 'field1' }, { id: 'field2' }]);
+      const result = handleStatusChange(AutofillStatus.FOUND, [{ id: 'field1' }, { id: 'field2' }]);
       
       expect(result?.type).toBe('info');
       expect(result?.message).toBe('Found 2 fillable fields');
@@ -209,7 +251,7 @@ describe('AutofillService Logic', () => {
     it('should handle found status with no elements', () => {
       const handleStatusChange = (status: string, elements: any[]) => {
         switch (status) {
-          case 'found':
+          case AutofillStatus.FOUND:
             if (elements.length > 0) {
               return { type: 'info', message: `Found ${elements.length} fillable field${elements.length === 1 ? '' : 's'}` };
             } else {
@@ -220,7 +262,7 @@ describe('AutofillService Logic', () => {
         }
       };
 
-      const result = handleStatusChange('found', []);
+      const result = handleStatusChange(AutofillStatus.FOUND, []);
       
       expect(result?.type).toBe('error');
       expect(result?.message).toBe('No fillable fields found');
@@ -229,7 +271,7 @@ describe('AutofillService Logic', () => {
     it('should handle singular vs plural field messages', () => {
       const handleStatusChange = (status: string, elements: any[]) => {
         switch (status) {
-          case 'found':
+          case AutofillStatus.FOUND:
             if (elements.length > 0) {
               return { type: 'info', message: `Found ${elements.length} fillable field${elements.length === 1 ? '' : 's'}` };
             } else {
@@ -240,8 +282,8 @@ describe('AutofillService Logic', () => {
         }
       };
 
-      const singleResult = handleStatusChange('found', [{ id: 'field1' }]);
-      const multipleResult = handleStatusChange('found', [{ id: 'field1' }, { id: 'field2' }]);
+      const singleResult = handleStatusChange(AutofillStatus.FOUND, [{ id: 'field1' }]);
+      const multipleResult = handleStatusChange(AutofillStatus.FOUND, [{ id: 'field1' }, { id: 'field2' }]);
       
       expect(singleResult?.message).toBe('Found 1 fillable field');
       expect(multipleResult?.message).toBe('Found 2 fillable fields');
@@ -259,7 +301,7 @@ describe('AutofillService Logic', () => {
           await mockAutofill.fill();
           return { success: true };
         } catch (error) {
-          return { success: false, error: error.message };
+          return { success: false, error: (error as Error).message };
         }
       };
 
@@ -279,7 +321,7 @@ describe('AutofillService Logic', () => {
           await mockStorage.getItem('sync:gofakeitMode');
           return { success: true };
         } catch (error) {
-          return { success: false, error: error.message };
+          return { success: false, error: (error as Error).message };
         }
       };
 
@@ -293,33 +335,30 @@ describe('AutofillService Logic', () => {
   describe('Autofill Operations Logic', () => {
     it('should handle autofill all operation', async () => {
       const mockAutofill = {
-        fill: vi.fn().mockResolvedValue({ success: 3, failed: 0 }),
-        updateSettings: vi.fn()
+        fill: vi.fn().mockResolvedValue(undefined) // New API doesn't return result object
       };
 
       const autofillAll = async () => {
         const settings = { mode: 'auto', stagger: 50, badges: 3000 };
-        mockAutofill.updateSettings(settings);
+        // New API creates new instance with settings instead of updateSettings
         const result = await mockAutofill.fill();
         return result;
       };
 
       const result = await autofillAll();
       
-      expect(result.success).toBe(3);
-      expect(result.failed).toBe(0);
-      expect(mockAutofill.updateSettings).toHaveBeenCalledWith({ mode: 'auto', stagger: 50, badges: 3000 });
+      expect(result).toBeUndefined(); // New API doesn't return result object
+      expect(mockAutofill.fill).toHaveBeenCalled();
     });
 
     it('should handle autofill selected operation', async () => {
       const mockAutofill = {
-        fill: vi.fn().mockResolvedValue({ success: 1, failed: 0 }),
-        updateSettings: vi.fn()
+        fill: vi.fn().mockResolvedValue(undefined) // New API doesn't return result object
       };
 
       const autofillSelected = async (element: any) => {
         const settings = { mode: 'manual', stagger: 100, badges: 5000 };
-        mockAutofill.updateSettings(settings);
+        // New API creates new instance with settings instead of updateSettings
         const result = await mockAutofill.fill(element);
         return result;
       };
@@ -327,14 +366,13 @@ describe('AutofillService Logic', () => {
       const mockElement = { id: 'test-input' };
       const result = await autofillSelected(mockElement);
       
-      expect(result.success).toBe(1);
-      expect(result.failed).toBe(0);
+      expect(result).toBeUndefined(); // New API doesn't return result object
       expect(mockAutofill.fill).toHaveBeenCalledWith(mockElement);
     });
 
     it('should handle context menu function with element and function name', async () => {
       const mockAutofill = {
-        fill: vi.fn().mockResolvedValue({ success: 1, failed: 0 })
+        fill: vi.fn().mockResolvedValue(undefined) // New API doesn't return result object
       };
 
       const applyContextMenuFunction = async (funcName: string, targetElement: any) => {
@@ -345,8 +383,7 @@ describe('AutofillService Logic', () => {
       const mockElement = { id: 'test-input' };
       const result = await applyContextMenuFunction('email', mockElement);
       
-      expect(result.success).toBe(1);
-      expect(result.failed).toBe(0);
+      expect(result).toBeUndefined(); // New API doesn't return result object
       expect(mockAutofill.fill).toHaveBeenCalledWith(mockElement, 'email');
     });
   });

@@ -153,9 +153,9 @@ export class PasswordGenerator {
       // Use gofakeit plugin's fetchFunc
       const result = await fetchFunc('password', params);
       
-      if (result.success && result.data) {
+      if (result.result) {
         // Stop animation and reveal final password
-        this.revealPassword(result.data);
+        this.revealPassword(result.result);
       } else {
         this.stopScrambleAnimation();
         throw new Error(result.error || 'Failed to generate password');

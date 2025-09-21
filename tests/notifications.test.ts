@@ -1,70 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Test the showAutofillResults helper function logic
-function showAutofillResults(result: any, context: string = 'form fields'): string {
-  if (result.success === 0 && result.failed === 0) {
-    return `ℹ️ No fillable ${context} found`;
-  } else {
-    if (result.success > 0 && result.failed === 0) {
-      return `✅ Successfully filled ${result.success} ${context}${result.success === 1 ? '' : 's'}!`;
-    } else if (result.success > 0 && result.failed > 0) {
-      return `⚠️ Filled ${result.success} ${context}${result.success === 1 ? '' : 's'}, ${result.failed} failed`;
-    } else if (result.failed > 0) {
-      return `❌ Failed to fill ${result.failed} ${context}${result.failed === 1 ? '' : 's'}`;
-    }
-  }
-  return '';
-}
-
-describe('Autofill Results Logic', () => {
-  beforeEach(() => {
-    // Reset any mocks before each test
-    vi.clearAllMocks();
-  });
-
-  it('should show no fields found message when no fields processed', () => {
-    const result = { success: 0, failed: 0 };
-    const message = showAutofillResults(result, 'form field');
-    
-    expect(message).toBe('ℹ️ No fillable form field found');
-  });
-
-  it('should show success message when all fields filled successfully', () => {
-    const result = { success: 3, failed: 0 };
-    const message = showAutofillResults(result, 'form field');
-    
-    expect(message).toBe('✅ Successfully filled 3 form fields!');
-  });
-
-  it('should show success message with singular form for single field', () => {
-    const result = { success: 1, failed: 0 };
-    const message = showAutofillResults(result, 'form field');
-    
-    expect(message).toBe('✅ Successfully filled 1 form field!');
-  });
-
-  it('should show warning message when some fields failed', () => {
-    const result = { success: 2, failed: 1 };
-    const message = showAutofillResults(result, 'form field');
-    
-    expect(message).toBe('⚠️ Filled 2 form fields, 1 failed');
-  });
-
-  it('should show error message when all fields failed', () => {
-    const result = { success: 0, failed: 2 };
-    const message = showAutofillResults(result, 'form field');
-    
-    expect(message).toBe('❌ Failed to fill 2 form fields');
-  });
-
-  it('should handle different context types', () => {
-    const result = { success: 1, failed: 0 };
-    const message = showAutofillResults(result, 'input field');
-    
-    expect(message).toBe('✅ Successfully filled 1 input field!');
-  });
-});
-
 describe('Browser Extension Testing Concepts', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -78,8 +13,8 @@ describe('Browser Extension Testing Concepts', () => {
           return { status: 'ok' };
         case 'autofill-all':
           return { action: 'autofill-all' };
-        case 'autofill-selected':
-          return { action: 'autofill-selected' };
+        case 'autofill-selection':
+          return { action: 'autofill-selection' };
         case 'context-menu':
           return { action: 'context-menu' };
         default:

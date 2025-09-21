@@ -41,19 +41,19 @@ describe('MessageHandler Logic', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should handle autofill-selected command correctly', () => {
+    it('should handle autofill-selection command correctly', () => {
       const handleMessage = (msg: any, sender: any, sendResponse: any) => {
         switch (msg.command) {
-          case 'autofill-selected':
-            return { action: 'autofill-selected', success: true };
+          case 'autofill-selection':
+            return { action: 'autofill-selection', success: true };
           default:
             return { success: false };
         }
       };
 
-      const result = handleMessage({ command: 'autofill-selected' }, {}, vi.fn());
+      const result = handleMessage({ command: 'autofill-selection' }, {}, vi.fn());
       
-      expect(result.action).toBe('autofill-selected');
+      expect(result.action).toBe('autofill-selection');
       expect(result.success).toBe(true);
     });
 
@@ -82,7 +82,7 @@ describe('MessageHandler Logic', () => {
         switch (msg.command) {
           case 'ping':
           case 'autofill-all':
-          case 'autofill-selected':
+          case 'autofill-selection':
           case 'context-menu':
             return { success: true };
           default:
@@ -271,7 +271,7 @@ describe('MessageHandler Logic', () => {
               throw new Error('Unknown command');
           }
         } catch (error) {
-          return { success: false, error: error.message };
+          return { success: false, error: (error as Error).message };
         }
       };
 
@@ -297,7 +297,7 @@ describe('MessageHandler Logic', () => {
               return { success: false };
           }
         } catch (error) {
-          return { success: false, error: error.message };
+          return { success: false, error: (error as Error).message };
         }
       };
 

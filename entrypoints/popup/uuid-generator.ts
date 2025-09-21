@@ -95,9 +95,9 @@ export class UuidGenerator {
       // Use gofakeit plugin's fetchFunc - uuid function takes no parameters
       const result = await fetchFunc('uuid');
 
-      if (result.success && result.data) {
+      if (result.result) {
         // Stop animation and reveal final UUID
-        this.revealUuid(result.data);
+        this.revealUuid(result.result);
       } else {
         this.stopScrambleAnimation();
         throw new Error(result.error || 'Failed to generate UUID');
