@@ -16,10 +16,12 @@
     "clean": "rm -rf .output dist",
     "test": "vitest --run",
     "test:run": "vitest run",
-    "release": "node release.js"
+    "release": "node release.js",
+    "deploy": "node deploy.js",
+    "deploy:dry": "node deploy.js --dry-run"
   },
   "dependencies": {
-    "gofakeit": "^2.3.0"
+    "gofakeit": "^2.5.0"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.6",

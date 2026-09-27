@@ -2,6 +2,8 @@
 
 A comprehensive browser extension that generates fake data for web forms using the [Gofakeit library](https://github.com/brianvoe/gofakeit). This extension provides multiple ways to generate realistic fake data for testing and development purposes, supporting both Chrome and Firefox browsers.
 
+See [CHANGELOG.md](./CHANGELOG.md) for release history.
+
 ## 🚀 Features
 
 - **Smart Form Detection**: Automatically detects and fills form fields with appropriate fake data
@@ -18,8 +20,8 @@ A comprehensive browser extension that generates fake data for web forms using t
 ## 📦 Installation
 
 ### For Users
+**Firefox Add-ons**: [Install from Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/gofakeit/)
 **Chrome Web Store**: [Install from Chrome Web Store](https://chrome.google.com/webstore) (coming soon)
-**Firefox Add-ons**: [Install from Firefox Add-ons](https://addons.mozilla.org) (coming soon)
 
 ### For Developers
 ```bash
@@ -121,6 +123,7 @@ public/
 - **Manual Mode**: Requires explicit user selection for each field
 - **Stagger Timing**: Control the delay between filling multiple fields
 - **Badge Duration**: Set how long success/error badges are displayed
+- **Debug**: Log how each field was resolved (function, source, score) to the page console
 
 ## 🔧 Gofakeit Integration
 
@@ -158,6 +161,43 @@ The extension fetches the complete list of available functions from the Gofakeit
 - Run `npm test` to execute the test suite
 - Tests cover core functionality, error handling, and edge cases
 - Continuous integration ensures code quality
+
+## 🚀 Deploying
+
+Deploy builds and publishes the extension to the Chrome Web Store and Firefox
+Add-ons in a single command.
+
+### One-time setup
+
+Generate store credentials interactively. This creates a `.env.submit` file,
+which is gitignored:
+
+```bash
+npx wxt submit init
+```
+
+It asks for:
+
+- **Chrome**: extension ID, Google Cloud OAuth client ID, client secret, and refresh token
+- **Firefox**: add-on ID, JWT issuer, and JWT secret
+
+> The very first upload of each extension must be done by hand in the store
+> dashboards. Automated deploys only work for updating an existing listing.
+
+### Deploy
+
+```bash
+npm run deploy        # build, zip, and submit to both stores
+npm run deploy:dry    # validate credentials without uploading anything
+```
+
+Both stores reject a version that has already been uploaded, so bump the
+version and commit it before deploying:
+
+```bash
+npm run release       # prompts for a new version, builds, and zips
+npm run deploy
+```
 
 ## 🤝 Contributing
 

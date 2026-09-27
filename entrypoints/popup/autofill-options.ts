@@ -4,6 +4,7 @@ export class AutofillOptions {
   private modeToggle: HTMLInputElement;
   private staggerRange: HTMLInputElement;
   private badgesRange: HTMLInputElement;
+  private debugToggle: HTMLInputElement;
   private staggerValue: HTMLElement;
   private badgesValue: HTMLElement;
   private closeBtn: HTMLButtonElement;
@@ -13,6 +14,7 @@ export class AutofillOptions {
     this.modeToggle = document.getElementById('modal-toggle-mode') as HTMLInputElement;
     this.staggerRange = document.getElementById('modal-range-stagger') as HTMLInputElement;
     this.badgesRange = document.getElementById('modal-range-badges') as HTMLInputElement;
+    this.debugToggle = document.getElementById('modal-toggle-debug') as HTMLInputElement;
     this.staggerValue = document.getElementById('stagger-value')!;
     this.badgesValue = document.getElementById('badges-value')!;
     this.closeBtn = document.getElementById('autofill-options-close') as HTMLButtonElement;
@@ -54,6 +56,11 @@ export class AutofillOptions {
       await this.saveSettings();
     });
 
+    // Auto-save debug toggle changes
+    this.debugToggle.addEventListener('change', async () => {
+      await this.saveSettings();
+    });
+
     // Close on Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.modal.classList.contains('active')) {
@@ -88,15 +95,17 @@ export class AutofillOptions {
 
   private async loadSettings(): Promise<void> {
     try {
-      const [mode, stagger, badges] = await Promise.all([
+      const [mode, stagger, badges, debug] = await Promise.all([
         storage.getItem<string>('sync:gofakeitMode') ?? 'auto',
         storage.getItem<number>('sync:gofakeitStagger') ?? 50,
-        storage.getItem<number>('sync:gofakeitBadges') ?? 3000
+        storage.getItem<number>('sync:gofakeitBadges') ?? 3000,
+        storage.getItem<boolean>('sync:gofakeitDebug') ?? false
       ]);
 
       this.modeToggle.checked = mode === 'auto';
       this.staggerRange.value = (stagger ?? 50).toString();
       this.badgesRange.value = (badges ?? 3000).toString();
+      this.debugToggle.checked = debug ?? false;
       this.updateRangeDisplay('stagger');
       this.updateRangeDisplay('badges');
     } catch (error) {
@@ -110,7 +119,8 @@ export class AutofillOptions {
       await storage.setItems([
         { key: 'sync:gofakeitMode', value: modeValue },
         { key: 'sync:gofakeitStagger', value: parseInt(this.staggerRange.value) },
-        { key: 'sync:gofakeitBadges', value: parseInt(this.badgesRange.value) }
+        { key: 'sync:gofakeitBadges', value: parseInt(this.badgesRange.value) },
+        { key: 'sync:gofakeitDebug', value: this.debugToggle.checked }
       ]);
 
       // Update the main toggle to match the modal setting

@@ -21,7 +21,7 @@ async function injectContentScriptIfNeeded(tabId: number): Promise<void> {
   if (!isInjected) {
     await browser.scripting.executeScript({
       target: { tabId },
-      files: ['content.js']
+      files: ['/content-scripts/content.js']
     });
   }
 }

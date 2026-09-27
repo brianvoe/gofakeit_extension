@@ -11,7 +11,10 @@ export default defineConfig({
     description: 'Generate fake data for testing and development',
     browser_specific_settings: {
       gecko: {
-        id: 'extension@gofakeit.com'
+        id: 'extension@gofakeit.com',
+        data_collection_permissions: {
+          required: ['none'],
+        },
       }
     },
     icons: {

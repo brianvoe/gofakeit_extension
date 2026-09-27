@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Test the logic of context menu functionality without importing the actual module
 describe('Context Menu Logic', () => {
@@ -33,7 +33,7 @@ describe('Context Menu Logic', () => {
           const data = await response.json();
           return { success: true, data };
         } catch (error) {
-          return { success: false, error: error.message };
+          return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       };
 
@@ -58,7 +58,7 @@ describe('Context Menu Logic', () => {
           const data = await response.json();
           return { success: true, data };
         } catch (error) {
-          return { success: false, error: error.message };
+          return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       };
 
@@ -80,7 +80,7 @@ describe('Context Menu Logic', () => {
           const data = await response.json();
           return { success: true, data };
         } catch (error) {
-          return { success: false, error: error.message };
+          return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       };
 
@@ -199,7 +199,7 @@ describe('Context Menu Logic', () => {
         { value: 'firstName', category: 'person' },
       ];
 
-      const organizeFunctionsByCategory = (funcList: Array<{value: string, display: string, category: string}>) => {
+      const organizeFunctionsByCategory = (funcList: Array<{value: string, display?: string, category: string}>) => {
         const categories: Record<string, Record<string, string>> = {};
         
         funcList.forEach(func => {
