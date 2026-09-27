@@ -231,7 +231,32 @@ async function checkChromeStore(env) {
     });
 
     if (!tokenRes.ok) {
-      return { store, status: 'error', reason: `token request failed (HTTP ${tokenRes.status})` };
+      // Distinguish the common Google OAuth failures so the fix is obvious.
+      let errorCode = '';
+      try {
+        errorCode = (await tokenRes.json())?.error ?? '';
+      } catch {
+        // response was not JSON
+      }
+
+      let hint = '';
+      if (errorCode === 'invalid_grant') {
+        // Usually an expired/revoked refresh token: Testing-mode consent
+        // screens issue refresh tokens that expire after 7 days.
+        hint =
+          ' — regenerate CHROME_REFRESH_TOKEN in the OAuth Playground' +
+          (tokenRes.status === 400 ? ' (Testing-mode tokens expire after 7 days)' : '');
+      } else if (errorCode === 'invalid_client') {
+        hint = ' — CHROME_CLIENT_ID / CHROME_CLIENT_SECRET do not match, or the OAuth client is deleted';
+      } else if (tokenRes.status === 403) {
+        hint = ' — the signed-in Google account may lack access; check the OAuth consent screen test users';
+      }
+
+      return {
+        store,
+        status: 'error',
+        reason: `token request failed (HTTP ${tokenRes.status}${errorCode ? ` ${errorCode}` : ''})${hint}`,
+      };
     }
 
     const { access_token: accessToken } = await tokenRes.json();
