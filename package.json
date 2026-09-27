@@ -1,6 +1,7 @@
 {
   "name": "gofakeit-extension",
   "version": "1.0.1",
+  "private": true,
   "type": "module",
   "description": "Browser extension to generate fake data using the Gofakeit API",
   "scripts": {
@@ -18,7 +19,8 @@
     "test:run": "vitest run",
     "release": "node release.js",
     "deploy": "node deploy.js",
-    "deploy:dry": "node deploy.js --dry-run"
+    "deploy:dry": "node deploy.js --dry-run",
+    "deploy:check": "node deploy.js --check"
   },
   "dependencies": {
     "gofakeit": "^2.5.0"

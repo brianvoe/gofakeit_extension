@@ -85,6 +85,9 @@ web_modules/
 # Store deployment credentials (publish-browser-extension)
 .env.submit
 
+# Local record of submitted store versions (duplicate-deploy guard)
+.deploy-history.json
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache

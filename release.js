@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { execSync } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import readline from 'readline';
@@ -43,6 +43,10 @@ function exec(command, options = {}) {
   }
 }
 
+function execOutput(command) {
+  return execSync(command, { cwd: rootDir, encoding: 'utf8' }).trim();
+}
+
 function readPackageJson() {
   const packagePath = join(rootDir, 'package.json');
   return JSON.parse(readFileSync(packagePath, 'utf8'));
@@ -53,17 +57,25 @@ function writePackageJson(packageJson) {
   writeFileSync(packagePath, JSON.stringify(packageJson, null, 2) + '\n');
 }
 
-function askQuestion(question) {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+// A single readline interface for the whole run. Creating one per question
+// drops any buffered input, which breaks non-interactive/piped usage.
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
+function askQuestion(question) {
   return new Promise(resolve => {
     rl.question(question, answer => {
-      rl.close();
       resolve(answer);
     });
+  });
+}
+
+function askYesNo(question) {
+  return askQuestion(question).then(answer => {
+    const normalized = answer.trim().toLowerCase();
+    return normalized === 'y' || normalized === 'yes';
   });
 }
 
@@ -92,6 +104,75 @@ function validateVersion(currentVersion, newVersion) {
   return null;
 }
 
+function tagExists(tag) {
+  try {
+    execSync(`git rev-parse -q --verify "refs/tags/${tag}"`, {
+      cwd: rootDir,
+      stdio: 'pipe',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// dist is gitignored, so only the versioned metadata is committed
+const RELEASE_PATHS = ['package.json', 'package-lock.json', 'CHANGELOG.md'];
+
+function commitReleaseChanges(version) {
+  const changes = execOutput(
+    `git status --porcelain ${RELEASE_PATHS.join(' ')}`
+  );
+
+  if (!changes) {
+    log('ℹ️  No release files to commit.', 'cyan');
+    return true;
+  }
+
+  log(`   Staging: ${RELEASE_PATHS.join(', ')}`, 'cyan');
+  if (!exec(`git add ${RELEASE_PATHS.join(' ')}`)) return false;
+  if (!exec(`git commit -m "release - v${version}"`)) return false;
+  log('✅ Release changes committed!', 'green');
+
+  const otherChanges = execOutput('git status --porcelain');
+  if (otherChanges) {
+    log(
+      '⚠️  Other uncommitted changes were not included in the release commit.',
+      'yellow'
+    );
+  }
+
+  return true;
+}
+
+async function createAndPushTag(version) {
+  const tag = `v${version}`;
+
+  if (tagExists(tag)) {
+    log(`❌ Tag ${tag} already exists locally.`, 'red');
+    return false;
+  }
+
+  const status = execOutput('git status --porcelain');
+  if (status) {
+    log(
+      '⚠️  Uncommitted changes remain. The tag will point at the last commit only.',
+      'yellow'
+    );
+  }
+
+  log(`\n🏷️  Creating tag ${tag}...`, 'yellow');
+  if (!exec(`git tag -a ${tag} -m "Release ${tag}"`)) return false;
+  log(`✅ Tag ${tag} created!`, 'green');
+
+  log('\n📤 Pushing commits and tag to remote...', 'yellow');
+  if (!exec('git push')) return false;
+  if (!exec(`git push origin ${tag}`)) return false;
+  log(`✅ Tag ${tag} pushed to remote!`, 'green');
+
+  return true;
+}
+
 async function main() {
   log('🚀 Starting release process...', 'bright');
 
@@ -103,7 +184,24 @@ async function main() {
   }
   log('✅ Tests passed!', 'green');
 
-  // Step 2: Get current version and ask for new version
+  // Step 2: Confirm changelog update
+  log('\n📚 Step 2: Changelog confirmation...', 'yellow');
+  log('   Please add an entry for this release to CHANGELOG.md.', 'cyan');
+
+  let changelogConfirmed = false;
+  do {
+    changelogConfirmed = await askYesNo(
+      'Have you updated CHANGELOG.md for this release? (y/n): '
+    );
+
+    if (!changelogConfirmed) {
+      log('❌ Please update CHANGELOG.md before continuing.', 'red');
+    }
+  } while (!changelogConfirmed);
+
+  log('✅ Changelog update confirmed!', 'green');
+
+  // Step 3: Get current version and ask for new version
   const packageJson = readPackageJson();
   const currentVersion = packageJson.version;
 
@@ -121,7 +219,7 @@ async function main() {
   } while (!versionType);
 
   log(
-    `\n🔄 Step 2: Updating version from ${currentVersion} to ${newVersion} (${versionType} release)...`,
+    `\n🔄 Step 3: Updating version from ${currentVersion} to ${newVersion} (${versionType} release)...`,
     'yellow'
   );
 
@@ -138,48 +236,93 @@ async function main() {
   }
   log('✅ Package-lock.json updated!', 'green');
 
-  // Step 3: Clean previous builds
-  log('\n🧹 Step 3: Cleaning previous builds...', 'yellow');
+  // Step 4: Clean previous builds
+  log('\n🧹 Step 4: Cleaning previous builds...', 'yellow');
   if (!exec('npm run clean')) {
     log('❌ Clean failed. Aborting release.', 'red');
     process.exit(1);
   }
   log('✅ Cleaned previous builds!', 'green');
 
-  // Step 4: Build extensions
-  log('\n🔨 Step 4: Building extensions...', 'yellow');
+  // Step 5: Build extensions
+  log('\n🔨 Step 5: Building extensions...', 'yellow');
   if (!exec('npm run build')) {
     log('❌ Build failed. Aborting release.', 'red');
     process.exit(1);
   }
   log('✅ Extensions built successfully!', 'green');
 
-  // Step 5: Create zip files
-  log('\n📦 Step 5: Creating zip files...', 'yellow');
+  // Step 6: Create zip files
+  log('\n📦 Step 6: Creating zip files...', 'yellow');
   if (!exec('npm run zip')) {
     log('❌ Zip creation failed. Aborting release.', 'red');
     process.exit(1);
   }
   log('✅ Zip files created successfully!', 'green');
 
-  // Step 6: Show results
-  log('\n🎉 Release completed successfully!', 'bright');
+  // Step 7: Show results
+  const base = `gofakeit-extension-${newVersion}`;
+  log('\n🎉 Release built successfully!', 'bright');
   log(`📋 Version: ${newVersion}`, 'green');
   log('📁 Build artifacts:', 'blue');
   log('   - dist/chrome-mv3/ (Chrome extension)', 'cyan');
   log('   - dist/firefox-mv2/ (Firefox extension)', 'cyan');
   log('📦 Zip files:', 'blue');
-  log('   - dist/gofakeit-extension-1.0-chrome.zip', 'cyan');
-  log('   - dist/gofakeit-extension-1.0-firefox.zip', 'cyan');
-  log('   - dist/gofakeit-extension-1.0-sources.zip', 'cyan');
-  
-  log('\n🚀 Ready for deployment!', 'bright');
-  log('💡 Next steps:', 'yellow');
-  log('   1. Test the built extensions', 'cyan');
-  log('   2. Upload to Chrome Web Store', 'cyan');
-  log('   3. Upload to Firefox Add-ons', 'cyan');
-  log('   4. Commit and push changes', 'cyan');
-  log(`   5. Create a git tag: git tag v${newVersion}`, 'cyan');
+  log(`   - dist/${base}-chrome.zip`, 'cyan');
+  log(`   - dist/${base}-firefox.zip`, 'cyan');
+  log(`   - dist/${base}-sources.zip`, 'cyan');
+
+  // Step 8: Commit version bump
+  log('\n📝 Step 8: Committing release changes to git...', 'yellow');
+  if (!commitReleaseChanges(newVersion)) {
+    log('❌ Failed to commit release changes.', 'red');
+    process.exit(1);
+  }
+
+  // Step 9: Optional store deploy
+  log('\n🚀 Step 9: Publishing to the extension stores (optional)...', 'yellow');
+  const hasCredentials =
+    existsSync(join(rootDir, '.env.submit')) || Boolean(process.env.CHROME_CLIENT_ID);
+
+  if (!hasCredentials) {
+    log('ℹ️  No store credentials found (.env.submit). Skipping deploy.', 'cyan');
+    log('   Run `npx wxt submit init` once, then `npm run deploy`.', 'cyan');
+  } else {
+    const shouldDeploy = await askYesNo(
+      'Publish this version to Chrome Web Store and Firefox Add-ons now? (y/n): '
+    );
+
+    if (shouldDeploy) {
+      if (!exec('npm run deploy')) {
+        log('❌ Deploy failed. The version bump is committed; re-run `npm run deploy`.', 'red');
+        process.exit(1);
+      }
+      log('✅ Submitted to both stores!', 'green');
+    } else {
+      log('ℹ️  Skipped deploy. Run `npm run deploy` when ready.', 'cyan');
+    }
+  }
+
+  // Step 10: Optional git tag and push
+  log('\n🏷️  Step 10: Git tag (optional)...', 'yellow');
+  const shouldTag = await askYesNo(
+    `Would you like to create and push git tag v${newVersion}? (y/n): `
+  );
+
+  if (shouldTag) {
+    if (!(await createAndPushTag(newVersion))) {
+      log('❌ Git tag step failed. You can tag and push manually.', 'red');
+      process.exit(1);
+    }
+  } else {
+    log('ℹ️  Skipped git tag. Tag and push manually when ready:', 'cyan');
+    log(`   git tag -a v${newVersion} -m "Release v${newVersion}" && git push origin v${newVersion}`, 'cyan');
+  }
+
+  log('\n🚀 Release complete!', 'bright');
+  log(`   Version ${newVersion} is staged for the stores.`, 'green');
+
+  rl.close();
 }
 
 // Handle errors

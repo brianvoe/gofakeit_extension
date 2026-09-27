@@ -169,26 +169,69 @@ Add-ons in a single command.
 
 ### One-time setup
 
-Generate store credentials interactively. This creates a `.env.submit` file,
-which is gitignored:
+Credentials live in a gitignored `.env.submit` file. Copy the committed
+template and fill in the blanks:
 
 ```bash
-npx wxt submit init
+cp .env.submit.example .env.submit
 ```
 
-It asks for:
+Fill in these values:
 
-- **Chrome**: extension ID, Google Cloud OAuth client ID, client secret, and refresh token
-- **Firefox**: add-on ID, JWT issuer, and JWT secret
+| Key | Where to get it |
+| --- | --- |
+| `CHROME_EXTENSION_ID` | Chrome Web Store developer dashboard, under the extension name (or the item URL) |
+| `CHROME_CLIENT_ID` / `CHROME_CLIENT_SECRET` | Google Cloud Console → Credentials → OAuth client ID (type **Web application**, with redirect URI `https://developers.google.com/oauthplayground`), after enabling the Chrome Web Store API |
+| `CHROME_REFRESH_TOKEN` | OAuth 2.0 Playground using your own client ID/secret and the `chromewebstore` scope |
+| `FIREFOX_EXTENSION_ID` | Already known (`extension@gofakeit.com`) and derivable from the manifest |
+| `FIREFOX_JWT_ISSUER` / `FIREFOX_JWT_SECRET` | <https://addons.mozilla.org/developers/addon/api/key/> |
+
+> **Chrome refresh token:** do not use the tool's built-in
+> `Generate new refresh token?` step — it relies on Google's retired
+> out-of-band OAuth flow and fails with `redirect_uri_mismatch`. Instead:
+>
+> 1. Open <https://developers.google.com/oauthplayground>
+> 2. Gear icon → check "Use your own OAuth credentials" → paste your client ID
+>    and secret
+> 3. Add scope `https://www.googleapis.com/auth/chromewebstore`
+> 4. Authorize APIs → sign in → "Exchange authorization code for tokens"
+> 5. Copy the `refresh_token` into `CHROME_REFRESH_TOKEN`
+>
+> If your OAuth consent screen is still in **Testing** status, Google expires
+> the refresh token after 7 days. Move the app to **In production** for a token
+> that keeps working.
 
 > The very first upload of each extension must be done by hand in the store
 > dashboards. Automated deploys only work for updating an existing listing.
+
+Verify the credentials and check for a duplicate version without uploading
+anything:
+
+```bash
+npm run deploy:check  # report only; exits non-zero on a duplicate
+```
 
 ### Deploy
 
 ```bash
 npm run deploy        # build, zip, and submit to both stores
 npm run deploy:dry    # validate credentials without uploading anything
+```
+
+Deploy prompts before each irreversible step:
+
+1. Whether to run a dry run first (defaults to **yes**)
+2. Whether to submit for real (defaults to **yes**)
+
+It also refuses to upload a version that already exists, checking the local git
+tags, its own deploy history, and the live stores:
+
+```bash
+npm run deploy -- --yes           # no prompts (CI); duplicates still abort
+npm run deploy -- --force         # override the duplicate guard
+npm run deploy -- --firefox-only  # only Firefox Add-ons
+npm run deploy -- --chrome-only   # only Chrome Web Store
+npm run deploy -- --skip-checks   # skip the duplicate checks
 ```
 
 Both stores reject a version that has already been uploaded, so bump the
